@@ -1,25 +1,35 @@
-import React from 'react';
-import logo from './logo.svg';
+import React from 'react'
+import { ConfigProvider, Layout } from 'antd'
+import {
+  BrowserRouter as Router,
+  Switch,
+  Route,
+  Link,
+  useParams
+} from "react-router-dom"
 import './App.css';
+import './common/style/page-base.css'
+// 由于 antd 组件的默认文案是英文，所以需要修改为中文
+import zhCN from 'antd/lib/locale/zh_CN';
+
+import Sider from './components/Sider/Sider'
+import Header from './components/Header/Header'
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <ConfigProvider locale={zhCN}>
+      <Layout className="layout-wrap">
+        <Sider></Sider>
+        <Layout>
+          <Header></Header>
+          <Layout.Content>
+            <Router>
+
+            </Router>
+          </Layout.Content>
+        </Layout>
+        </Layout>
+    </ConfigProvider>
   );
 }
 

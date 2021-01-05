@@ -1,0 +1,260 @@
+/* page margins settings */
+
+.margin {
+  margin: 5px;
+}
+
+.margin-2x {
+  margin: 10px;
+}
+
+.margin-3x {
+  margin: 15px;
+}
+
+.margin-4x {
+  margin: 20px;
+}
+
+.margin-top {
+  margin-top: 5px;
+}
+
+.margin-top-2x {
+  margin-top: 10px;
+}
+
+.margin-top-3x {
+  margin-top: 15px;
+}
+
+.margin-top-4x {
+  margin-top: 20px;
+}
+
+.margin-right {
+  margin-right: 5px;
+}
+
+.margin-right-2x {
+  margin-right: 10px;
+}
+
+.margin-right-3x {
+  margin-right: 15px;
+}
+
+.margin-right-4x {
+  margin-right: 20px;
+}
+
+.margin-bottom {
+  margin-bottom: 5px;
+}
+
+.margin-bottom-2x {
+  margin-bottom: 10px;
+}
+
+.margin-bottom-3x {
+  margin-bottom: 15px;
+}
+
+.margin-bottom-4x {
+  margin-bottom: 20px;
+}
+
+.margin-left {
+  margin-left: 5px;
+}
+
+.margin-left-2x {
+  margin-left: 10px;
+}
+
+.margin-left-3x {
+  margin-left: 15px;
+}
+
+.margin-left-4x {
+  margin-left: 20px;
+}
+
+/* page paddings settings */
+
+.padding {
+  padding: 5px;
+}
+
+.padding-2x {
+  padding: 10px;
+}
+
+.padding-3x {
+  padding: 15px;
+}
+
+.padding-4x {
+  padding: 20px;
+}
+
+.padding-top {
+  padding-top: 5px;
+}
+
+.padding-top-2x {
+  padding-top: 10px;
+}
+
+.padding-top-3x {
+  padding-top: 15px;
+}
+
+.padding-top-4x {
+  padding-top: 20px;
+}
+
+.padding-right {
+  padding-right: 5px;
+}
+
+.padding-right-2x {
+  padding-right: 10px;
+}
+
+.padding-right-3x {
+  padding-right: 15px;
+}
+
+.padding-right-4x {
+  padding-right: 20px;
+}
+
+.padding-bottom {
+  padding-bottom: 5px;
+}
+
+.padding-bottom-2x {
+  padding-bottom: 10px;
+}
+
+.padding-bottom-3x {
+  padding-bottom: 15px;
+}
+
+.padding-bottom-4x {
+  padding-bottom: 20px;
+}
+
+.padding-left {
+  padding-left: 5px;
+}
+
+.padding-left-2x {
+  padding-left: 10px;
+}
+
+.padding-left-3x {
+  padding-left: 15px;
+}
+
+.padding-left-4x {
+  padding-left: 20px;
+}
+
+/* page text color settings */
+
+.text-primary {
+  color: #409eff
+}
+
+.text-success {
+  color: #67c23a
+}
+
+.text-info {
+  color: #909399
+}
+
+.text-warning {
+  color: #e6a23c
+}
+
+.text-danger {
+  color: #f56c6c
+}
+
+
+/* font setting */
+
+.h1 {
+  font-family: "Helvetica Neue",Helvetica,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","微软雅黑",Arial,sans-serif;
+  font-size: 20px;
+  font-weight: 400;
+}
+
+.h2 {
+  font-family: "Helvetica Neue",Helvetica,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","微软雅黑",Arial,sans-serif;
+  font-size: 18px;
+  font-weight: 400;
+}
+
+.h3 {
+  font-family: "Helvetica Neue",Helvetica,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","微软雅黑",Arial,sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+}
+
+.text-regular {
+  font-family: "Helvetica Neue",Helvetica,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","微软雅黑",Arial,sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.text-small {
+  font-family: "Helvetica Neue",Helvetica,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","微软雅黑",Arial,sans-serif;
+  font-size: 13px;
+  font-weight: 400;
+}
+
+.text-smaller {
+  font-family: "Helvetica Neue",Helvetica,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","微软雅黑",Arial,sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.text-button {
+  cursor: pointer;
+  color: -webkit-link;
+}
+
+.link-button {
+  cursor: pointer;
+  color: #fff;
+  background-color: #409EFF;
+  border-color: #409EFF;
+  padding: 7px 15px;
+  border-radius: 3px;
+}
+
+.bold-text {
+  font-weight: bold;
+}
+
+.flex-align-center {
+  display: flex;
+  align-items: center;
+}
+
+.flex-justify-center {
+  display: flex;
+  justify-content: center;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.page-header {
+  background-color: #fff;
+}
