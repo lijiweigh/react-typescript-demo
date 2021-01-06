@@ -1,34 +1,21 @@
 import React from 'react'
-import { ConfigProvider, Layout } from 'antd'
-import {
-  BrowserRouter as Router,
-  Switch,
-  Route,
-  Link,
-  useParams
-} from "react-router-dom"
+import { ConfigProvider } from 'antd'
+import { BrowserRouter as Router } from 'react-router-dom'
+import { renderRoutes } from "react-router-config"
+
 import './App.css';
 import './common/style/page-base.css'
 // 由于 antd 组件的默认文案是英文，所以需要修改为中文
 import zhCN from 'antd/lib/locale/zh_CN';
 
-import Sider from './components/Sider/Sider'
-import Header from './components/Header/Header'
+import routes from './route/route'
 
 function App() {
   return (
     <ConfigProvider locale={zhCN}>
-      <Layout className="layout-wrap">
-        <Sider></Sider>
-        <Layout>
-          <Header></Header>
-          <Layout.Content>
-            <Router>
-
-            </Router>
-          </Layout.Content>
-        </Layout>
-        </Layout>
+      <Router>
+        {renderRoutes(routes)}
+      </Router>
     </ConfigProvider>
   );
 }
