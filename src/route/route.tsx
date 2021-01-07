@@ -29,6 +29,7 @@ const routes: RouteConfig[] = [
         name: 'FormDetail',
         path: '/form/detail/:id',
         breadCrumb: '表单详情',
+        hideInMenu: true,
         preBreadCrumb: {
           path: '/form/formList',
           breadCrumb: '表单列表',
