@@ -122,6 +122,13 @@ checkBrowsers(paths.appPath, isInteractive)
       urls.lanUrlForConfig
     );
     const devServer = new WebpackDevServer(compiler, serverConfig);
+    devServer.headers = {
+      'Access-Control-Allow-Origin': '*',
+    };
+    devServer.historyApiFallback = true;
+    devServer.hot = false;
+    devServer.watchContentBase = false;
+    devServer.liveReload = false;
     // Launch WebpackDevServer.
     devServer.listen(port, HOST, err => {
       if (err) {

@@ -13,7 +13,7 @@ import routes from './route/route'
 function App() {
   return (
     <ConfigProvider locale={zhCN}>
-      <Router>
+      <Router basename={(window as any).__POWERED_BY_QIANKUN__ ? '/app-react' : '/'}>
         {renderRoutes(routes)}
       </Router>
     </ConfigProvider>
