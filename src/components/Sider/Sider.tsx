@@ -13,7 +13,7 @@ export default function MySider() {
         height: '100vh',
         position: 'fixed',
         left: 0,
-        top: 0,
+        top: '64px',
         background: '#273352'
       }}
       width="256"

@@ -1,4 +1,5 @@
-import React from 'react'
+import React, {  } from 'react'
+import { withRouter, RouteComponentProps } from 'react-router-dom'
 import { Card, Form, Input, Button, Select, message, DatePicker, Switch, Checkbox, Radio } from 'antd'
 import PageHeader from '../../components/PageHeader/PageHeader'
 import { CreateFormReq } from '../../types/form'
@@ -8,7 +9,7 @@ import { FormTypeList, FormResourceList } from '../../const/form'
 const { Option } = Select
 const { RangePicker } = DatePicker
 
-export default function CreateFrom() {
+function CreateFrom(props: RouteComponentProps) {
   const layout = {
     labelCol: { span: 4 },
     wrapperCol: { span: 8 }
@@ -24,8 +25,9 @@ export default function CreateFrom() {
         +new Date(values.date[0]),
         +new Date(values.date[1]),
       ]
-      await createForm(values)
+      // await createForm(values)
       message.success('创建成功')
+      props.history.push('/form/formList')
     } catch {}
   }
   const onReset = () => {
@@ -74,3 +76,5 @@ export default function CreateFrom() {
     </>
   )
 }
+
+export default withRouter(CreateFrom)

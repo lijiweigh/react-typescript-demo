@@ -10,8 +10,9 @@ export default function MyLayout(route: RouteConfig) {
     <Layout className="layout-wrap">
       <Sider></Sider>
       <Layout>
-        <Header></Header>
-        <Layout.Content style={{paddingTop: 64, marginLeft: 256}}>
+        {/* <Header></Header> */}
+        <Layout.Content style={{marginLeft: 256}}>
+        {/* <Layout.Content> */}
           {renderRoutes(route.route.routes)}
         </Layout.Content>
       </Layout>
