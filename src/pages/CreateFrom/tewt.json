@@ -1,0 +1,164 @@
+[
+  { "parser": { "requireEnsure": false } },
+  {
+    "oneOf": [
+      {
+        "test": [{}],
+        "loader": "/Users/lijiwei/project/orion-web-notify-admin/node_modules/url-loader/dist/cjs.js",
+        "options": {
+          "limit": 10000,
+          "mimetype": "image/avif",
+          "name": "static/media/[name].[hash:8].[ext]"
+        }
+      },
+      {
+        "test": [{}, {}, {}, {}],
+        "loader": "/Users/lijiwei/project/orion-web-notify-admin/node_modules/url-loader/dist/cjs.js",
+        "options": { "limit": 10000, "name": "static/media/[name].[hash:8].[ext]" }
+      },
+      {
+        "test": {},
+        "include": "/Users/lijiwei/project/orion-web-notify-admin/src",
+        "loader": "/Users/lijiwei/project/orion-web-notify-admin/node_modules/babel-loader/lib/index.js",
+        "options": {
+          "customize": "/Users/lijiwei/project/orion-web-notify-admin/node_modules/babel-preset-react-app/webpack-overrides.js",
+          "presets": [
+            [
+              "/Users/lijiwei/project/orion-web-notify-admin/node_modules/babel-preset-react-app/index.js",
+              { "runtime": "automatic" }
+            ]
+          ],
+          "babelrc": false,
+          "configFile": false,
+          "cacheIdentifier": "development:babel-plugin-named-asset-import@0.3.7:babel-preset-react-app@10.0.0:react-dev-utils@11.0.1:react-scripts@4.0.1",
+          "plugins": [
+            [
+              "/Users/lijiwei/project/orion-web-notify-admin/node_modules/babel-plugin-named-asset-import/index.js",
+              {
+                "loaderMap": {
+                  "svg": { "ReactComponent": "@svgr/webpack?-svgo,+titleProp,+ref![path]" }
+                }
+              }
+            ],
+            "/Users/lijiwei/project/orion-web-notify-admin/node_modules/react-refresh/babel.js",
+            ["import", { "libraryName": "antd", "libraryDirectory": "lib", "style": true }]
+          ],
+          "cacheDirectory": true,
+          "cacheCompression": false,
+          "compact": false
+        }
+      },
+      {
+        "test": {},
+        "exclude": {},
+        "loader": "/Users/lijiwei/project/orion-web-notify-admin/node_modules/babel-loader/lib/index.js",
+        "options": {
+          "babelrc": false,
+          "configFile": false,
+          "compact": false,
+          "presets": [
+            [
+              "/Users/lijiwei/project/orion-web-notify-admin/node_modules/babel-preset-react-app/dependencies.js",
+              { "helpers": true }
+            ]
+          ],
+          "cacheDirectory": true,
+          "cacheCompression": false,
+          "cacheIdentifier": "development:babel-plugin-named-asset-import@0.3.7:babel-preset-react-app@10.0.0:react-dev-utils@11.0.1:react-scripts@4.0.1",
+          "sourceMaps": true,
+          "inputSourceMap": true,
+          "plugins": [
+            ["import", { "libraryName": "antd", "libraryDirectory": "lib", "style": true }]
+          ]
+        }
+      },
+      {
+        "test": {},
+        "exclude": {},
+        "use": [
+          "/Users/lijiwei/project/orion-web-notify-admin/node_modules/style-loader/dist/cjs.js",
+          {
+            "loader": "/Users/lijiwei/project/orion-web-notify-admin/node_modules/css-loader/dist/cjs.js",
+            "options": { "importLoaders": 1, "sourceMap": true }
+          },
+          {
+            "loader": "/Users/lijiwei/project/orion-web-notify-admin/node_modules/postcss-loader/src/index.js",
+            "options": { "ident": "postcss", "sourceMap": true }
+          }
+        ],
+        "sideEffects": true
+      },
+      {
+        "test": {},
+        "use": [
+          "/Users/lijiwei/project/orion-web-notify-admin/node_modules/style-loader/dist/cjs.js",
+          {
+            "loader": "/Users/lijiwei/project/orion-web-notify-admin/node_modules/css-loader/dist/cjs.js",
+            "options": { "importLoaders": 1, "sourceMap": true, "modules": {} }
+          },
+          {
+            "loader": "/Users/lijiwei/project/orion-web-notify-admin/node_modules/postcss-loader/src/index.js",
+            "options": { "ident": "postcss", "sourceMap": true }
+          }
+        ]
+      },
+      {
+        "test": {},
+        "exclude": {},
+        "use": [
+          "/Users/lijiwei/project/orion-web-notify-admin/node_modules/style-loader/dist/cjs.js",
+          {
+            "loader": "/Users/lijiwei/project/orion-web-notify-admin/node_modules/css-loader/dist/cjs.js",
+            "options": { "importLoaders": 3, "sourceMap": true }
+          },
+          {
+            "loader": "/Users/lijiwei/project/orion-web-notify-admin/node_modules/postcss-loader/src/index.js",
+            "options": { "ident": "postcss", "sourceMap": true }
+          },
+          {
+            "loader": "/Users/lijiwei/project/orion-web-notify-admin/node_modules/resolve-url-loader/index.js",
+            "options": {
+              "sourceMap": true,
+              "root": "/Users/lijiwei/project/orion-web-notify-admin/src"
+            }
+          },
+          {
+            "loader": "/Users/lijiwei/project/orion-web-notify-admin/node_modules/sass-loader/dist/cjs.js",
+            "options": { "sourceMap": true }
+          }
+        ],
+        "sideEffects": true
+      },
+      {
+        "test": {},
+        "use": [
+          "/Users/lijiwei/project/orion-web-notify-admin/node_modules/style-loader/dist/cjs.js",
+          {
+            "loader": "/Users/lijiwei/project/orion-web-notify-admin/node_modules/css-loader/dist/cjs.js",
+            "options": { "importLoaders": 3, "sourceMap": true, "modules": {} }
+          },
+          {
+            "loader": "/Users/lijiwei/project/orion-web-notify-admin/node_modules/postcss-loader/src/index.js",
+            "options": { "ident": "postcss", "sourceMap": true }
+          },
+          {
+            "loader": "/Users/lijiwei/project/orion-web-notify-admin/node_modules/resolve-url-loader/index.js",
+            "options": {
+              "sourceMap": true,
+              "root": "/Users/lijiwei/project/orion-web-notify-admin/src"
+            }
+          },
+          {
+            "loader": "/Users/lijiwei/project/orion-web-notify-admin/node_modules/sass-loader/dist/cjs.js",
+            "options": { "sourceMap": true }
+          }
+        ]
+      },
+      {
+        "loader": "/Users/lijiwei/project/orion-web-notify-admin/node_modules/file-loader/dist/cjs.js",
+        "exclude": [{}, {}, {}],
+        "options": { "name": "static/media/[name].[hash:8].[ext]" }
+      }
+    ]
+  }
+]
