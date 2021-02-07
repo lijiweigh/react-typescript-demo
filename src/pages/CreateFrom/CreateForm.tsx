@@ -6,7 +6,9 @@ import { createForm } from '../../services/form'
 import { FormTypeList, FormResourceList } from '../../const/form'
 
 // import './index.less'
-import './index.module.less'
+import mmmm from './index.module.less'
+
+console.log(mmmm)
 
 const { Option } = Select
 const { RangePicker } = DatePicker
@@ -37,7 +39,6 @@ export default function CreateFrom() {
 
   return (
     <>
-      <div className="test">adadfdsffd</div>
       <PageHeader title='创建表单' />
       <section className='padding-4x'>
         <Card>
