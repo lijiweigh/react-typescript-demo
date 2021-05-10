@@ -1,0 +1,67 @@
+.ruleTreeContainer {
+	position: relative;
+
+	.next-input.next-select-inner {
+		min-width: 100%;
+	}
+
+	.drop-area {
+		border-radius: 3px;
+		border: 1px dashed #1890ff;
+		background: #91d5ff;
+	}
+
+	.drop-area-can-drop {
+		background: #1890ff;
+	}
+
+	.icon {
+		color: #c7d0d9 !important;
+	}
+
+	.delete-icon {
+		& > svg {
+			vertical-align: -1.5px;
+		}
+	}
+
+	.actions {
+		border: 1px dashed #c7d0d9;
+		border-radius: 4px;
+		margin-top: 4px;
+		height: 32px;
+		line-height: 30px;
+    overflow-y: hidden;
+    display: flex;
+    align-items: center;
+	}
+
+	.action-icon {
+		padding: 0 8px;
+		border-right: 1px dashed #c7d0d9;
+		cursor: pointer;
+		&:last-child {
+			border-right: none;
+		}
+	}
+
+	.action-icon-disabled {
+		cursor: not-allowed !important;
+	}
+
+	.drag {
+		border-radius: 3px;
+		padding: 0 8px;
+		background: #edf2f5;
+		display: flex;
+		position: absolute;
+	}
+
+	.link {
+		position: absolute;
+		background-color: #c7d0d9;
+		&-highlight {
+			background-color: #1890ff;
+		}
+	}
+}
