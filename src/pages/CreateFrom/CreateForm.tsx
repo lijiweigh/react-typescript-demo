@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { Card, Form, Button, message, DatePicker, Switch, Checkbox, Radio, Select, Input } from 'antd'
 import PageHeader from '../../components/PageHeader/PageHeader'
 import { CreateFormReq } from '../../types/form'
@@ -13,7 +13,6 @@ import 'codemirror/mode/javascript/javascript.js';
 import 'codemirror/addon/hint/javascript-hint.js';
 // import './index.less'
 import mmmm from './index.module.less'
-import '@alifd/next/dist/next.min.css';
 
 console.log(mmmm)
 
@@ -52,43 +51,63 @@ function SayHello() {
   console.log('hello')
 }
 `;
-
+  const [vvv, setVvv] = useState<any>({"relation":"or","children":[{"operation":">","amount":"3232"},{"operation":"<","amount":"3323"},{"relation":"and","children":[{"operation":"=","amount":"32323"},{"operation":">","amount":"32323"},{"operation":"=","amount":"23232322"}]}]})
+  useEffect(() => {
+    setTimeout(() => {
+      console.log('set')
+      // @ts-ignore
+      setVvv(pre => {
+        // return {
+        //   ...pre,
+        //   relation: 'and'
+        // }
+        return {"relation":"and","children":[{"operation":">","amount":"666"},{"operation":"<","amount":"3323"},{"relation":"and","children":[{"operation":"=","amount":"32323"},{"operation":">","amount":"32323"},{"operation":"=","amount":"23232322"}]}]}
+      })
+    }, 3000);
+  }, [])
   return (
     <div style={{padding: '50px', background: '#fff'}}>
-     {/* @ts-ignore */}
       <GovRuleTree
-          canRootChange={true}
-          onChange={changedValues => {
-            console.log('changedValues: ', changedValues);
-          }}
-          fields={[
-            // {
-            //   id: 'fruit',
-            //   element: <Card title="aaaa">sfsffsf</Card>
-            // },
-            {
-              id: 'operation',
-              element: (
-                <Select style={{ width: 150 }} placeholder="请选择">
-                  <Select.Option value=">">Greater Than</Select.Option>
-                  <Select.Option value="<">Less Than</Select.Option>
-                  <Select.Option value="=">Equal</Select.Option>
-                </Select>
-              )
-            },
-            {
-              id: 'amount',
-              rules: [
-                {
-                  required: true,
-                  message: '数量不能为空'
-                }
-              ],
-              element: <Input style={{ width: 200 }} placeholder="请输入数量" />
+        // disabled
+        canRootChange={true}
+        onChange={changedValues => {
+          console.log('changedValues: ', JSON.stringify(changedValues));
+          setVvv(changedValues)
+        }}
+        rootRelations={[{text: '且', value: 'and'}, {text: '或', value: 'or'}]}
+        relations={[{text: '且', value: 'and'}, {text: '或', value: 'or'}]}
+        value={vvv}
+        fields={[
+          // {
+          //   id: 'fruit',
+          //   element: <Card title="aaaa">sfsffsf</Card>
+          // },
+          {
+            id: 'operation',
+            element: (
+              <Select style={{ width: 150 }} placeholder="请选择">
+                <Select.Option value=">">Greater Than</Select.Option>
+                <Select.Option value="<">Less Than</Select.Option>
+                <Select.Option value="=">Equal</Select.Option>
+              </Select>
+            )
+          },
+          {
+            id: 'amount',
+            rules: [
+              {
+                required: true,
+                message: '数量不能为空'
+              }
+            ],
+            // element: <Input style={{ width: 200 }} placeholder="请输入数量" />
+            render() {
+              return <Input style={{ width: 200 }} placeholder="请输入数量" />
             }
-          ]}
-        />
-      {/* <Code.Basic
+          }
+        ]}
+      />
+      <Code.Basic
       mode="javascript"
         value={value}
         events={[
@@ -138,7 +157,7 @@ function SayHello() {
             </Form.Item>
           </Form>
         </Card>
-      </section> */}
+      </section>
     </div>
   )
 }

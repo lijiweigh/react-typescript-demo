@@ -1,38 +1,27 @@
-// @ts-nocheck
-import { RuleTreeProps, NodeType, DataType, DragProps, DropProps } from './interface'
+import {
+  RuleTreeProps,
+  DragProps,
+  DropProps,
+  ValueProps,
+  RootNodeType,
+  ChildNodeType,
+  ActionNodeType,
+  FieldProps,
+} from './index.d'
 import { Button, Select, Tooltip, Form as AntdForm } from 'antd'
 import { DeleteOutlined, PlusOutlined, PlusSquareOutlined } from '@ant-design/icons'
-import { Icon, Balloon, } from '@alifd/next'
 import React from 'react'
 import Form, { Field, FormInstance } from 'rc-field-form'
-import { hierarchy } from 'd3-hierarchy'
+import { hierarchy, HierarchyPointLink, HierarchyPointNode } from 'd3-hierarchy'
 import { DndProvider, createDndContext } from 'react-dnd'
 import HTML5Backend from 'react-dnd-html5-backend'
 import { isObject, isArray, isUndefined, assign, get, set, cloneDeep } from 'lodash-es'
 import Drag, { UnDrag } from './drag'
 import Drop from './drop'
 import Link from './link'
-import constants from './constants'
-import GovIcon from '@aligov/icon'
-import './index.scss'
-
-const FormItem = AntdForm.Item
-
-function getHierarchyId(...args: any[]) {
-  for (var _len = args.length, ids = new Array(_len), _key = 0; _key < _len; _key++) {
-    ids[_key] = args[_key]
-  }
-
-  return ids.join('.')
-}
-
-let gIndex = 0
-
-const {
+import {
   RELATIONS,
-  ACTION,
-  RELATION,
-  LEAF,
+  NodeType,
   COMPONENT_HEIGHT,
   COMPONENT_SPACE_HORIZONTAL,
   COMPONENT_SPACE_VERTICAL,
@@ -40,7 +29,42 @@ const {
   RELATION_WIDTH,
   ALIGN_CENTER,
   FLEX_ALIGN_CENTER,
-} = constants
+  EXTRA_MOVE_ICON_WIDTH,
+  RELATION_HEIGHT,
+  ICON_COLOR,
+  ACTION_HEIGHT
+} from './constants'
+import './index.less'
+
+const {
+  ACTION,
+  RELATION,
+  LEAF,
+} = NodeType
+
+const FormItem = AntdForm.Item
+
+function getHierarchyId(...args: string[]) {
+  let len = args.length,
+    ids = new Array(len),
+    key = 0
+  for (; key < len; key++) {
+    ids[key] = args[key]
+  }
+
+  return ids.join('.')
+}
+// 找到嵌套的最后一个子节点
+function findLastChild(parent: HierarchyPointNode<ChildNodeType>): HierarchyPointNode<ChildNodeType> {
+  const child = parent.children![parent.children!.length - 1]
+  if(child.children) {
+    return findLastChild(child)
+  } else {
+    return child
+  }
+}
+
+let gIndex = 0
 
 const DndContext = createDndContext(HTML5Backend)
 
@@ -48,36 +72,31 @@ const alwaysTrue = function alwaysTrue() {
   return true
 }
 
-export default class RuleTree extends React.Component<RuleTreeProps, null> {
+export default class RuleTree extends React.Component<RuleTreeProps, { value: ValueProps }> {
   form: FormInstance | undefined
   dndType: string
   key: number
-  relationPaths: string[][] | undefined
-  value: any
+  value: ValueProps
   inited: boolean
   pathByKey: any
-  handleAddCondition: (data: any) => void
-  handleAddGroup: (data: {
-    parentPath: any
-  }) => void
-  handleDrop: (dropProps: any, dragProps: any) => void
-  handleDeleteGroup: (node: any) => void
-  handleDelete: (data: any, node: any) => void
-  onValuesChange: (changedValues: any, allValues: any) => void
-  constructor(props: any) {
+  static defaultProps: {
+    rootRelations: { value: string; text: string }[]
+    relations: { value: string; text: string }[]
+    canAddCondition: () => boolean
+    canAddConditionGroup: () => boolean
+  }
+  constructor(props: RuleTreeProps) {
     super(props)
-    // this.form = void 0
-    // this.dndType = void 0
     this.key = 0
-    // this.relationPaths = void 0
-    // this.value = void 0
     this.inited = false
+    // 不知道干嘛用
     this.pathByKey = Object.create(null)
 
     this.dndType = `dndType-${gIndex}`
     gIndex += 1
     let defaultValue = {
       children: [{}],
+      relation: props.rootRelations[0].value,
     }
 
     if (!isUndefined(props.value)) {
@@ -89,34 +108,28 @@ export default class RuleTree extends React.Component<RuleTreeProps, null> {
     return this
   }
 
-  // componentWillReceiveProps(nextProps: RuleTreeProps): void {
-  //   console.log('aaa')
-  //   if (!isUndefined(nextProps.value)) {
-  //     this.inited = true
-  //     this.value = nextProps.value
-  //     this.onChange(this.value)
-  //   }
-  // }
-
-  handleAddCondition = (data) => {
+  // 添加条件
+  handleAddCondition = (data: ChildNodeType) => {
+    console.log('handleAddCondition', cloneDeep(data))
     const children = get(this.value, data.parentPath)
     children.push({})
-
     this.onChange(this.value)
   }
-
-  handleAddGroup = (data: { parentPath: any }) => {
+  // 添加条件组
+  handleAddGroup = (data: ChildNodeType) => {
+    console.log('handleAddGroup', cloneDeep(data))
     const children = get(this.value, data.parentPath)
     children.push({
       children: [{}],
+      relation: get(this.props.relations, '0.value')
     })
 
     this.onChange(this.value)
   }
 
-  handleDrop = (dropProps, dragProps) => {
-    console.log('dropProps', dropProps)
-    console.log('dragProps', dragProps)
+  handleDrop = (dropProps: DropProps, dragProps: DragProps) => {
+    console.log('dropProps', cloneDeep(dropProps))
+    console.log('dragProps', cloneDeep(dragProps))
     const parent = get(this.value, dragProps.data.parentPath)
     const dropParent = get(this.value, dropProps.data.parentPath) // 删掉
 
@@ -127,143 +140,56 @@ export default class RuleTree extends React.Component<RuleTreeProps, null> {
     this.onChange(this.value)
   }
 
-  handleDeleteGroup = (node) => {
-    const deleteParent = node.parent
-    const deleteGrandPa = deleteParent.parent
+  onValuesChange = (changedValues: any, allValues: any) => {
+    console.log('changedValues', cloneDeep(changedValues))
+    this.value = allValues
 
-    if (!deleteGrandPa) {
-      // root
-      this.value.children = []
-    } else if (!deleteGrandPa.data.parentPath) {
-      // grandpa是root
-      this.value.children.splice(deleteParent.data.index, 1)
-    } else {
-      const dp = get(this.value, deleteParent.data.parentPath)
-      dp.splice(deleteParent.data.index, 1)
-    }
-
-    this.onChange(this.value)
-  }
-
-  handleDelete = (data, node) => {
-    if (node.parent.children.length === 2) {
-      this.handleDeleteSingleGroup(node)
-    } else {
-      const deleteParent = get(this.value, data.parentPath)
-      deleteParent.splice(data.index, 1)
-
-      this.onChange(this.value)
-    }
-  }
-
-  onValuesChange = (changedValues, allValues) => {
-    const _this = this
-    _this.value = allValues
-
-    const namePath = _this.getNamePath(changedValues)
-
-    const _this$props = _this.props,
-      cascades = _this$props.cascades,
-      onCascade = _this$props.onCascade
+    const namePath = this.getNamePath(changedValues)
+    const { cascades, onCascade } = this.props
     const lastIndex = namePath.length - 1
     const id = namePath[lastIndex]
     const path = namePath.slice(0, lastIndex)
 
     if (onCascade && cascades && cascades.indexOf(id) > -1) {
       const ctx = {
-        getValue: (cid: any) => {
-          return _this.form!.getFieldValue([...path, cid])
-        },
-        setValues: (cid: { [x: string]: any }, value: any) => {
-          const fields = []
+        // getValue: (cid: string | string) => {
+        //   return this.form!.getFieldValue([...path, cid])
+        // },
+        // setValues: (cid: { [x: string]: any } | string, value: any) => {
+        //   const fields = []
 
-          if (isObject(cid)) {
-            Object.keys(cid).forEach((k) => {
-              const name = [...path, k]
-              set(_this.value, name, value)
-              fields.push({
-                name,
-                value: cid[k],
-              })
-            })
-          } else {
-            const name = [].concat(path, [cid])
-            set(_this.value, name, value)
-            fields.push({
-              name,
-              value,
-            })
-          }
+        //   if (isObject(cid)) {
+        //     Object.keys(cid).forEach((k) => {
+        //       const name = [...path, k]
+        //       set(this.value, name, value)
+        //       fields.push({
+        //         name,
+        //         value: cid[k],
+        //       })
+        //     })
+        //   } else {
+        //     const name = [...path, cid]
+        //     set(this.value, name, value)
+        //     fields.push({
+        //       name,
+        //       value,
+        //     })
+        //   }
 
-          _this.form.setFields(fields)
-        },
+        //   this.form!.setFields(fields)
+        // },
         id,
-        key: get(allValues, [].concat(path, ['key'])),
-        value: _this.form.getFieldValue(namePath),
+        key: get(allValues, [...path, 'key']),
+        value: this.form!.getFieldValue(namePath),
+        record: get(this.value, path)
       }
       onCascade(ctx)
     }
 
-    _this.onChange(_this.value)
+    this.onChange(this.value)
   }
 
-  renderActions = (data) => {
-    const this$props2 = this.props,
-      canAddCondition = this$props2.canAddCondition,
-      canAddConditionGroup = this$props2.canAddConditionGroup // const curLevel = data.parentPath.reduce((memo, item) => {
-    //   if(item === 'children') {
-    //     memo += 1;
-    //   }
-    //   return memo;
-    // }, 0);
-
-    const finalCanAddCondition = canAddCondition(data)
-    const finalCanAddConditionGroup = canAddConditionGroup(data)
-    return (
-      <div className='actions'>
-        {
-          <Tooltip
-            title='添加条件'
-          >
-            <PlusOutlined
-                disabled={!finalCanAddCondition}
-                style={{
-                  color: '#c7d0d9',
-                  padding: '0 8px',
-                  borderRight: '1px dashed #c7d0d9',
-                  height: '100%',
-                  ...FLEX_ALIGN_CENTER
-                }}
-                onClick={() => {
-                  return finalCanAddCondition && this.handleAddCondition(data)
-                }}
-              />
-          </Tooltip>
-        }
-        {
-          <Tooltip
-            title='添加条件组'
-          >
-            <PlusSquareOutlined
-                style={{
-                  color: '#c7d0d9',
-                  padding: '0 8px',
-                  fontSize: '15px',
-                  height: '100%',
-                  ...FLEX_ALIGN_CENTER
-                }}
-                disabled={!finalCanAddCondition}
-                onClick={() => {
-                  return finalCanAddConditionGroup && this.handleAddGroup(data)
-                }}
-              />
-          </Tooltip>
-        }
-      </div>
-    )
-  }
-
-  getUniqKey(key: any, keyMap: any): any {
+  getUniqKey(key: number, keyMap: any): number {
     if (key in keyMap) {
       const k = key + 1
       return this.getUniqKey(k, keyMap)
@@ -271,24 +197,20 @@ export default class RuleTree extends React.Component<RuleTreeProps, null> {
 
     return key
   }
-  setKey(value: any, keyMap: any): void {
-    const _this = this
-
-    /* eslint-disable no-param-reassign */
-    const createKey = (v) => {
-      if (isUndefined(v.key)) {
-        v.key = _this.getUniqKey(_this.key, keyMap)
+  setKey(value: ValueProps, keyMap: any): void {
+    const createKey = (v: ValueProps | number) => {
+      if (isUndefined((v as ValueProps).key)) {
+        ;(v as ValueProps).key = this.getUniqKey(this.key, keyMap)
       } else {
-        v.key = _this.getUniqKey(v.key, keyMap)
+        ;(v as ValueProps).key = this.getUniqKey((v as ValueProps).key, keyMap)
       }
 
-      keyMap[v.key] = 1
+      keyMap[(v as ValueProps).key] = 1
 
-      if (v.children) {
-        _this.setKey(v.children, keyMap)
+      if ((v as ValueProps).children) {
+        this.setKey((v as ValueProps).children, keyMap)
       }
     }
-    /* eslint-enable no-param-reassign */
 
     if (isArray(value)) {
       value.forEach((v) => {
@@ -298,36 +220,32 @@ export default class RuleTree extends React.Component<RuleTreeProps, null> {
       createKey(value)
     }
   }
-  addDropAreaAndOperation(children: any[], parentPath: string[], canDrag: any, level: any): any[] {
-    const _this = this
-
-    if (children === void 0) {
+  addOperation(children: any[], parentPath: (string | number)[], canDrag: boolean, level: number) {
+    if (children === undefined) {
       children = []
     }
 
-    const result = []
+    const result: (ChildNodeType | ActionNodeType)[] = []
 
     if (children.length) {
       children.forEach((child, index) => {
-        // @ts-ignore
-        const path = [].concat(parentPath, [index])
+        const path: (string | number)[] = [...parentPath, index]
         const key = child.key
-        const node = assign({}, child, {
+        const node: ChildNodeType = {
+          ...child,
           type: LEAF,
           key,
           index,
           parentPath,
           path,
-        })
+        }
 
         if (child.children) {
           // 关系节点
-          _this.relationPaths.push(path)
-
           node.type = RELATION
-          node.children = _this.addDropAreaAndOperation(
+          node.children = this.addOperation(
             child.children,
-            path.concat(['children']),
+            [...path, 'children'],
             canDrag,
             level + 1,
           )
@@ -351,23 +269,23 @@ export default class RuleTree extends React.Component<RuleTreeProps, null> {
     return result
   }
   buildNodes(
-    root: any,
-    canDrag: any,
+    root: HierarchyPointNode<ChildNodeType>,
+    canDrag: boolean,
   ): {
-    nodes: any
+    nodes: HierarchyPointNode<ChildNodeType>
     height: number
   } {
     let leafCount = 0 // 画布高度
 
     let height = 0
-    /* eslint-disable no-param-reassign */
 
     const nodes = root.eachAfter((d) => {
       d.y =
-        d.depth * (RELATION_WIDTH + COMPONENT_SPACE_HORIZONTAL + (canDrag ? COMPONENT_HEIGHT : 0))
-
+        //        关系节点的宽度 + 水平两个节点的距离 + 可以拖动时拖动按钮额外产生的宽度
+        d.depth * (RELATION_WIDTH + COMPONENT_SPACE_HORIZONTAL + (canDrag ? EXTRA_MOVE_ICON_WIDTH : 0))
+      // 根节点不能拖动，所以减去一个 EXTRA_MOVE_ICON_WIDTH
       if (canDrag && d.depth > 0) {
-        d.y -= COMPONENT_SPACE_HORIZONTAL
+        d.y -= EXTRA_MOVE_ICON_WIDTH
       }
 
       if (d.data.type !== RELATION) {
@@ -378,39 +296,28 @@ export default class RuleTree extends React.Component<RuleTreeProps, null> {
           d.children && d.children.length
             ? (d.children[0].x + d.children[d.children.length - 1].x) / 2
             : 0
-
+        // 根节点 后序遍历结束，开始设置整个规则树的高度
         if (!d.parent) {
-          height = d.children[d.children.length - 1].x + COMPONENT_HEIGHT
+          // 最下面的节点的x + 节点高度
+          height = findLastChild(d).x + COMPONENT_HEIGHT
         }
       }
     })
-    /* eslint-enable no-param-reassign */
 
     return {
       nodes,
       height,
     }
   }
-  createFields(nodes: any, canDrag: any): any[] {
-    const _this = this
 
-    const _this$props3 = this.props,
-      fields = _this$props3.fields,
-      relations = _this$props3.relations,
-      rootRelations = _this$props3.rootRelations,
-      canRootChange = _this$props3.canRootChange
+  createFields(nodes: HierarchyPointNode<ChildNodeType>[], canDrag: boolean) {
+    const { fields, relations, rootRelations, canRootChange } = this.props
     const value = this.value
-    const result: any[] = []
+    const result: JSX.Element[] = []
     const DragItem = canDrag ? Drag : UnDrag
     nodes.forEach((node, nindex) => {
-      const data = node.data,
-        x = node.x,
-        y = node.y,
-        parent = node.parent
-      const type = data.type,
-        key = data.key,
-        index = data.index,
-        path = data.path
+      const { data, x, y, parent } = node
+      const { type, key, index, path } = data as ChildNodeType
 
       if (!parent) {
         // root 节点
@@ -422,10 +329,11 @@ export default class RuleTree extends React.Component<RuleTreeProps, null> {
                 disabled={!canDrag}
                 style={{
                   width: RELATION_WIDTH,
+                  height: RELATION_HEIGHT,
                   minWidth: RELATION_WIDTH,
                   position: 'absolute',
                   left: y,
-                  top: x + COMPONENT_MARGIN / 2,
+                  top: x + (COMPONENT_HEIGHT - RELATION_HEIGHT) / 2,
                 }}
               >
                 {rootRelations.map((relation) => {
@@ -440,10 +348,11 @@ export default class RuleTree extends React.Component<RuleTreeProps, null> {
               <Button
                 style={{
                   width: RELATION_WIDTH,
+                  height: RELATION_HEIGHT,
                   minWidth: RELATION_WIDTH,
                   position: 'absolute',
                   left: y,
-                  top: x + COMPONENT_MARGIN / 2,
+                  top: x + (COMPONENT_HEIGHT - RELATION_HEIGHT) / 2,
                 }}
               >
                 {rootRelations[0].text}
@@ -451,7 +360,7 @@ export default class RuleTree extends React.Component<RuleTreeProps, null> {
             )}
           </Field>
         )
-        set(_this.value, path, initialValue)
+        set(this.value, path, initialValue)
         result.push(fieldElm)
       } else {
         // 非root节点，关系节点/叶子节点/action节点/drop节点
@@ -461,7 +370,6 @@ export default class RuleTree extends React.Component<RuleTreeProps, null> {
             index === 0
               ? x - COMPONENT_SPACE_VERTICAL
               : x - (x - (nodes[nindex - 1].x + COMPONENT_HEIGHT) + COMPONENT_SPACE_VERTICAL) / 2
-          /* eslint-disable react/jsx-no-bind */
 
           const dropEle = (
             <Drop
@@ -469,13 +377,12 @@ export default class RuleTree extends React.Component<RuleTreeProps, null> {
               y={dropX}
               node={node}
               data={data}
-              onDrop={_this.handleDrop.bind(_this)}
+              onDrop={this.handleDrop}
               canDrag={canDrag}
-              type={_this.dndType}
+              type={this.dndType}
               key={getHierarchyId(key, 'drop')}
             />
           )
-          /* eslint-enable react/jsx-no-bind */
 
           result.push(dropEle)
         }
@@ -490,7 +397,7 @@ export default class RuleTree extends React.Component<RuleTreeProps, null> {
               y={x}
               node={node}
               data={data}
-              type={_this.dndType}
+              type={this.dndType}
               key={getHierarchyId(key, 'relation')}
             >
               {
@@ -500,7 +407,7 @@ export default class RuleTree extends React.Component<RuleTreeProps, null> {
                       <FormItem
                         style={{
                           marginBottom: 0,
-                          ...FLEX_ALIGN_CENTER
+                          ...FLEX_ALIGN_CENTER,
                         }}
                       >
                         {
@@ -538,23 +445,23 @@ export default class RuleTree extends React.Component<RuleTreeProps, null> {
               y={x}
               data={data}
               node={node}
-              type={_this.dndType}
+              type={this.dndType}
               key={getHierarchyId(key, 'leaf')}
             >
-              {fields.map((field, i) => {
-                return _this.renderField(field, i, canDrag, path, key)
+              {fields.map((field: FieldProps, i: number) => {
+                return this.renderField(field, i, canDrag, path, key)
               })}
               {canDrag && (
                 <DeleteOutlined
                   style={{
                     marginLeft: COMPONENT_MARGIN,
                     cursor: 'pointer',
-                    color: '#c7d0d9',
+                    color: ICON_COLOR,
                     ...ALIGN_CENTER,
-                    ...FLEX_ALIGN_CENTER
+                    ...FLEX_ALIGN_CENTER,
                   }}
                   onClick={() => {
-                    return _this.handleDelete(data, node)
+                    return this.handleDelete(data, node)
                   }}
                 />
               )}
@@ -571,7 +478,7 @@ export default class RuleTree extends React.Component<RuleTreeProps, null> {
               }}
               key={getHierarchyId(key, 'action')}
             >
-              {_this.renderActions(data)}
+              {this.renderActions(data)}
             </div>
           )
         }
@@ -581,7 +488,145 @@ export default class RuleTree extends React.Component<RuleTreeProps, null> {
     })
     return result
   }
-  createLinks(links: any, canDrag: any): any {
+
+  /**
+   * 渲染field
+   */
+  renderField(
+    field: FieldProps,
+    index: number,
+    canDrag: boolean,
+    path: (string | number)[],
+    key: any,
+  ): JSX.Element {
+    const { id, rules, render } = field
+    const namePath = [...path, id]
+    // console.log(get(this.value, path))
+    let element
+    return (
+      <Field name={namePath} key={getHierarchyId(key, id)} rules={rules}>
+        {(control, meta, form) => {
+          if (render) {
+            const ctx = {
+              // getValue: (cid: string) => {
+              //   return this.form && this.form.getFieldValue([...path, cid])
+              // },
+              // setValues: (cid: string | { [key: string]: any }, value: any) => {
+              //   if (!this.form) return
+              //   const fields = []
+
+              //   if (isObject(cid)) {
+              //     Object.keys(cid).forEach((k) => {
+              //       const name = [...path, k]
+              //       set(this.value, name, value)
+              //       fields.push({
+              //         name,
+              //         value: cid[k],
+              //       })
+              //     })
+              //   } else {
+              //     const name = [...path, cid]
+              //     set(this.value, name, value)
+              //     fields.push({
+              //       name,
+              //       value,
+              //     })
+              //   }
+
+              //   this.form.setFields(fields)
+              // },
+              id,
+              key,
+              value: control.value,
+              record: get(this.value, path),
+              index
+            }
+            element = render(ctx)
+          } else {
+            element = field.element
+          }
+
+          const validateState = (meta.errors || []).length > 0 ? 'error' : undefined
+          const help = (meta.errors || []).length > 0 ? meta.errors[0] : undefined
+          const childElement = React.cloneElement(element as any, {
+            disabled: element!.props.disabled || !canDrag,
+            ...control,
+          })
+          return (
+            <FormItem
+              style={{
+                marginLeft: index ? COMPONENT_MARGIN : 0,
+                marginBottom: 0,
+                ...FLEX_ALIGN_CENTER,
+              }}
+              help={help}
+              validateStatus={validateState}
+            >
+              {childElement}
+            </FormItem>
+          )
+        }}
+      </Field>
+    )
+  }
+
+  renderActions = (data: ChildNodeType) => {
+    console.log('renderActions', cloneDeep(data))
+    const { canAddCondition, canAddConditionGroup } = this.props
+    // const curLevel = data.parentPath.reduce((memo, item) => {
+    //   if(item === 'children') {
+    //     memo += 1;
+    //   }
+    //   return memo;
+    // }, 0);
+
+    const finalCanAddCondition = canAddCondition(data)
+    const finalCanAddConditionGroup = canAddConditionGroup(data)
+    return (
+      <div
+        className='actions'
+        style={{
+          height: `${ACTION_HEIGHT}px`,
+          marginTop: `${(COMPONENT_HEIGHT - ACTION_HEIGHT) / 2}px`
+        }}
+      >
+        {
+          <Tooltip title='添加条件'>
+            <PlusOutlined
+              style={{
+                color: ICON_COLOR,
+                padding: '0 8px',
+                borderRight: '1px dashed ' + ICON_COLOR,
+                height: '100%',
+                ...FLEX_ALIGN_CENTER,
+              }}
+              onClick={() => {
+                return finalCanAddCondition && this.handleAddCondition(data)
+              }}
+            />
+          </Tooltip>
+        }
+        {
+          <Tooltip title='添加条件组'>
+            <PlusSquareOutlined
+              style={{
+                color: ICON_COLOR,
+                padding: '0 8px',
+                fontSize: '15px',
+                height: '100%',
+                ...FLEX_ALIGN_CENTER,
+              }}
+              onClick={() => {
+                return finalCanAddConditionGroup && this.handleAddGroup(data)
+              }}
+            />
+          </Tooltip>
+        }
+      </div>
+    )
+  }
+
+  createLinks(links: HierarchyPointLink<ChildNodeType>[], canDrag: boolean) {
     return links.map((link) => {
       const source = link.source,
         target = link.target
@@ -613,7 +658,19 @@ export default class RuleTree extends React.Component<RuleTreeProps, null> {
   /**
    * operations
    */
-  handleDeleteSingleGroup(node: any): void {
+  handleDelete = (data: ChildNodeType, node: HierarchyPointNode<ChildNodeType>) => {
+    console.log('handleDelete', cloneDeep(data), cloneDeep(node))
+    if (node.parent!.children!.length === 2) {
+      this.handleDeleteSingleGroup(node)
+    } else {
+      const deleteParent = get(this.value, data.parentPath)
+      deleteParent.splice(data.index, 1)
+
+      this.onChange(this.value)
+    }
+  }
+
+  handleDeleteSingleGroup(node: HierarchyPointNode<ChildNodeType>) {
     if (!node.parent || !node.parent.children) {
       return
     }
@@ -624,10 +681,29 @@ export default class RuleTree extends React.Component<RuleTreeProps, null> {
       this.handleDeleteSingleGroup(parent)
     }
   }
-  getNamePath(changedValues: any): any[] {
-    const namePath = []
 
-    const fillNamePath = (value) => {
+  handleDeleteGroup = (node: HierarchyPointNode<ChildNodeType>) => {
+    const deleteParent = node.parent as HierarchyPointNode<ChildNodeType>
+    const deleteGrandPa = deleteParent.parent
+
+    if (!deleteGrandPa) {
+      // root
+      this.value.children = []
+    } else if (!deleteGrandPa.data.parentPath) {
+      // grandpa是root
+      this.value.children.splice(deleteParent.data.index, 1)
+    } else {
+      const dp = get(this.value, deleteParent.data.parentPath)
+      dp.splice(deleteParent.data.index, 1)
+    }
+
+    this.onChange(this.value)
+  }
+
+  getNamePath(changedValues: any) {
+    const namePath: (string | number)[] = []
+
+    const fillNamePath = (value: any) => {
       if (isArray(value)) {
         value.forEach((v, i) => {
           if (!isUndefined(v)) {
@@ -641,7 +717,7 @@ export default class RuleTree extends React.Component<RuleTreeProps, null> {
 
         if (key === 'children') {
           // children
-          fillNamePath(value[key])
+          fillNamePath((value as ValueProps)[key])
         }
       }
     }
@@ -649,154 +725,93 @@ export default class RuleTree extends React.Component<RuleTreeProps, null> {
     fillNamePath(changedValues)
     return namePath
   }
-  componentDidUpdate(): void {
-    const _this = this
 
-    const relations = this.props.relations
-    const initRelations = []
-    this.relationPaths.forEach((name) => {
-      const relationValue = _this.form.getFieldValue(name)
+  // shouldComponentUpdate(nextProps: RuleTreeProps) {
+  //   console.group('shouldComponentUpdate')
+  //   console.log('nextProps', nextProps)
+  //   console.log(nextProps.value !== this.value)
+  //   console.groupEnd()
+  //   // return nextProps.value !== this.value
+  //   return true
+  // }
 
-      if (isUndefined(relationValue)) {
-        const initialValue = get(_this.value, name) || get(relations, '0.value')
-        initRelations.push({
-          name,
-          value: initialValue,
-        })
-        set(_this.value, name, initialValue)
-      }
-    })
-    this.form.setFields(initRelations)
+  componentDidUpdate() {
+    // const _this = this
+
+    // const relations = this.props.relations
+    // const initRelations: FieldData[] | { name: string[]; value: any }[] = []
+    console.group('componentDidUpdate')
+    // console.log('relationPaths', cloneDeep(this.relationPaths))
+    console.log('getFieldsValue', cloneDeep(this.form!.getFieldsValue()))
+    console.log('value', cloneDeep(this.value))
+    console.groupEnd()
+    // 新添加的条件组的关系是空的，因此需要把它们设置为默认值
+    // this.relationPaths!.forEach((name) => {
+    //   const relationValue = _this.form!.getFieldValue(name)
+    //   // 始终更新
+    //   // if (isUndefined(relationValue)) {
+    //     const initialValue = get(_this.value, name) || get(relations, '0.value')
+    //     initRelations.push({
+    //       name,
+    //       value: initialValue,
+    //     })
+    //     set(_this.value, name, initialValue)
+    //   // }
+    // })
+    // this.form!.setFields(initRelations)
+    this.form!.setFieldsValue(this.value)
   }
-  onChange(value: any): void {
-    this.form.setFieldsValue(value)
-    var onChange = this.props.onChange
-    /** ruleTree 本质为非受控组件，如果希望外部控制value，需要同时修改组件key */
 
+  onChange(value: any) {
+    this.form!.setFieldsValue(value)
+    const onChange = this.props.onChange
+    // 强制 React 重新渲染
     this.setState({})
-
+    console.log('onChange this.value', cloneDeep(this.value))
     if (onChange) {
       onChange(value)
     }
   }
-  /**
-   * 渲染field
-   */
-  renderField(field: any, index: any, canDrag: any, path: any, key: any): JSX.Element {
-    const _this = this
 
-    const id = field.id,
-      rules = field.rules,
-      render = field.render
-    const namePath = [].concat(path, [id])
-    let element
-    return (
-      <Field name={namePath} key={getHierarchyId(key, id)} rules={rules}>
-        {(control, meta, form) => {
-          if (render) {
-            const ctx = {
-              getValue: (cid) => {
-                return _this.form && _this.form.getFieldValue([].concat(path, [cid]))
-              },
-              setValues: (cid, value) => {
-                if (!_this.form) return
-                const fields = []
-
-                if (isObject(cid)) {
-                  Object.keys(cid).forEach((k) => {
-                    const name = [].concat(path, [k])
-                    set(_this.value, name, value)
-                    fields.push({
-                      name,
-                      value: cid[k],
-                    })
-                  })
-                } else {
-                  const name = [].concat(path, [cid])
-                  set(_this.value, name, value)
-                  fields.push({
-                    name,
-                    value,
-                  })
-                }
-
-                _this.form.setFields(fields)
-              },
-              id,
-              key,
-              value: control.value,
-            }
-            element = render(ctx)
-          } else {
-            element = field.element
-          }
-
-          const validateState = (meta.errors || []).length > 0 ? 'error' : undefined
-          const help = (meta.errors || []).length > 0 ? meta.errors[0] : undefined
-          const childElement = React.cloneElement(element, {
-            disabled: element.props.disabled || !canDrag,
-            ...control,
-          })
-          return (
-            <FormItem
-              style={{
-                marginLeft: index ? COMPONENT_MARGIN : 0,
-                marginBottom: 0,
-                ...FLEX_ALIGN_CENTER
-              }}
-              help={help}
-              validateStatus={validateState}
-            >
-              {childElement}
-            </FormItem>
-          )
-        }}
-      </Field>
-    )
-  }
-  /**
-   * icon actions 是否可点击
-   */
-  render(): JSX.Element {
-    const _this = this
-
-    const _this$props4 = this.props,
-      style = _this$props4.style,
-      _this$props4$classNam = _this$props4.className,
-      className = _this$props4$classNam === void 0 ? '' : _this$props4$classNam,
-      disabled = _this$props4.disabled
+  render() {
+    console.group('render')
+    const { style, disabled, onChange } = this.props
+    const className = this.props.className === undefined ? '' : this.props.className
     const canDrag = !disabled
-
-    if (!this.inited && this.props.value) {
+    // 作为受控组件使用的话，将value更新为props的value
+    if (onChange && this.props.value) {
       this.inited = true
-      this.value = this.props.value
+      this.value = cloneDeep(this.props.value)
     }
-
+    console.log('value', cloneDeep(this.value))
     this.setKey(this.value, {})
-    const finalValue = assign(
+    const rootNodeValue: RootNodeType = assign(
       {
         type: RELATION,
         path: ['relation'],
       },
       this.value,
     )
-    this.relationPaths = []
-    finalValue.children = this.addDropAreaAndOperation(
+    rootNodeValue.children = this.addOperation(
       this.value.children,
       ['children'],
       canDrag,
       0,
     )
-    const root = hierarchy(finalValue)
-
-    const _this$buildNodes = this.buildNodes(root, canDrag),
-      nodes = _this$buildNodes.nodes,
-      height = _this$buildNodes.height
+    console.log('rootNodeValue', cloneDeep(rootNodeValue))
+    const root = hierarchy(rootNodeValue) as HierarchyPointNode<ChildNodeType>
+    console.log('root', cloneDeep(root))
+    const buildNodes = this.buildNodes(root, canDrag),
+      nodes = buildNodes.nodes,
+      height = buildNodes.height
+    console.log('buildNodes', cloneDeep(buildNodes))
 
     const flattenNodes = nodes.descendants()
     const flattenLinks = nodes.links()
+    console.log('flattenNodes', cloneDeep(flattenNodes))
     const fields = this.createFields(flattenNodes, canDrag)
     const links = this.createLinks(flattenLinks, canDrag)
+    console.groupEnd()
     return (
       <DndProvider manager={DndContext.dragDropManager}>
         {
@@ -810,8 +825,8 @@ export default class RuleTree extends React.Component<RuleTreeProps, null> {
             {
               <Form
                 component='div'
-                ref={(_ref) => {
-                  _ref && (_this.form = _ref)
+                ref={(ref) => {
+                  ref && (this.form = ref)
                 }}
                 onValuesChange={this.onValuesChange}
                 initialValues={this.value}

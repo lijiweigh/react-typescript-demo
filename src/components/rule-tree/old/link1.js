@@ -1,6 +1,6 @@
 import _inheritsLoose from "@babel/runtime/helpers/inheritsLoose";
 import React from 'react';
-import constants from './constants';
+import constants from '../es/constants';
 const COMPONENT_HEIGHT = constants.COMPONENT_HEIGHT;
 
 function isHorizontal(x1, x2) {

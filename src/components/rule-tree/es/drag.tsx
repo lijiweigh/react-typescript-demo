@@ -1,67 +1,89 @@
-// @ts-nocheck
-import _extends from "@babel/runtime/helpers/extends";
-import React from 'react';
-import { DragProps } from './interface';
-import { DragSource } from 'react-dnd';
-import constants from './constants';
-import GovIcon from '@aligov/icon';
+import React from 'react'
+import { DragProps } from './index.d'
+import { DragSource } from 'react-dnd'
+import { ALIGN_CENTER, FLEX_ALIGN_CENTER, COMPONENT_HEIGHT } from './constants'
+import { DragOutlined } from '@ant-design/icons'
 
-const ALIGN_CENTER = constants.ALIGN_CENTER;
-
-const handleStyle = _extends({
+const handleStyle = {
   cursor: 'move',
-  marginRight: 6
-}, ALIGN_CENTER);
+  marginRight: 6,
+  ...ALIGN_CENTER,
+  ...FLEX_ALIGN_CENTER
+}
 
-const Drag = function Drag(_ref) {
-  const isDragging = _ref.isDragging, connectDragSource = _ref.connectDragSource, connectDragPreview = _ref.connectDragPreview, x = _ref.x, y = _ref.y, children = _ref.children;
-  const opacity = isDragging ? 0.4 : 1;
-  const dragHandler = <span style={handleStyle}>
-    <GovIcon className="icon" custom={true} type="tuodong" />
-  </span>;
-  return connectDragPreview( <div
-    style={{
-      opacity,
-      left: x,
-      top: y
-    }}
-    className="drag">
-    {connectDragSource(dragHandler)}
-    <span
-      style={_extends({
-        display: 'flex'
-      }, ALIGN_CENTER)}>
-      {children}
+const Drag = function Drag(ref: any) {
+  const {
+    isDragging,
+    connectDragSource,
+    connectDragPreview,
+    x,
+    y,
+    children,
+  } = ref
+  const opacity = isDragging ? 0.4 : 1
+  const dragHandler = (
+    <span style={handleStyle}>
+      <DragOutlined style={{ color: '#c7d0d9' }} />
     </span>
-  </div>);
-};
+  )
+  return connectDragPreview(
+    <div
+      style={{
+        opacity,
+        left: x,
+        top: y,
+        height: COMPONENT_HEIGHT,
+        ...FLEX_ALIGN_CENTER
+      }}
+      className='drag'
+    >
+      {connectDragSource(dragHandler)}
+      <span
+        style={{
+          ...ALIGN_CENTER,
+          ...FLEX_ALIGN_CENTER
+        }}
+      >
+        {children}
+      </span>
+    </div>,
+  )
+}
 
-export default DragSource(_ref2 => {
-  const type = _ref2.type;
-  return type;
-}, {
-  beginDrag: function beginDrag(props) {
-    return props;
-  }
-}, (connect, monitor) => {
-  return {
-    connectDragSource: connect.dragSource(),
-    connectDragPreview: connect.dragPreview(),
-    isDragging: monitor.isDragging()
-  };
-})(Drag);
-
-export const UnDrag = function UnDrag(_ref3) {
-  const children = _ref3.children, x = _ref3.x, y = _ref3.y;
+export const UnDrag = function UnDrag(ref: DragProps) {
+  const children = ref.children,
+    x = ref.x,
+    y = ref.y
   return (
     <div
-      style={_extends({
+      style={{
         position: 'absolute',
         left: x,
         top: y,
-        display: 'flex'
-      }, ALIGN_CENTER)}>
+        display: 'flex',
+        ...ALIGN_CENTER,
+      }}
+    >
       {children}
     </div>
-  );
-};
+  )
+}
+
+export default DragSource(
+  (ref: any) => {
+    const type = ref.type
+    return type
+  },
+  {
+    beginDrag: function beginDrag(props) {
+      return props
+    },
+  },
+  (connect, monitor) => {
+    return {
+      connectDragSource: connect.dragSource(),
+      connectDragPreview: connect.dragPreview(),
+      isDragging: monitor.isDragging(),
+    }
+  },
+)(Drag)

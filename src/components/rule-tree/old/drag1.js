@@ -1,7 +1,7 @@
 import _extends from "@babel/runtime/helpers/extends";
 import React from 'react';
 import { DragSource } from 'react-dnd';
-import constants from './constants';
+import constants from '../es/constants';
 import GovIcon from '@aligov/icon';
 var ALIGN_CENTER = constants.ALIGN_CENTER;
 

@@ -1,10 +1,8 @@
-// @ts-nocheck
 import React from 'react';
-import constants from './constants';
-import { LinkProps } from "./interface";
-const COMPONENT_HEIGHT = constants.COMPONENT_HEIGHT;
+import { COMPONENT_HEIGHT } from './constants';
+import { LinkProps } from "./index.d";
 
-function isHorizontal(x1, x2) {
+function isHorizontal(x1: number, x2: number) {
   if (x1 === x2) {
     return false;
   }
@@ -12,17 +10,17 @@ function isHorizontal(x1, x2) {
   return true;
 }
 
-function genKey(value) {
+function genKey(value: number[]) {
   if (value === void 0) {
     value = [];
   }
 
-  const _value = value, x1 = _value[0], y1 = _value[1], x2 = _value[2], y2 = _value[3];
+  const [x1, y1, x2, y2] = value
   return `${x1},${y1}-${x2},${y2}`;
 }
 
-export default class Link extends React.PureComponent<LinkProps, null> {
-  drawLine(x1: any, y1: any, x2: any, y2: any): JSX.Element {
+export default class Link extends React.PureComponent<LinkProps> {
+  drawLine(x1: number, y1: number, x2: number, y2: number): JSX.Element {
     const isH = isHorizontal(x1, x2);
     const width = isH ? x2 - x1 : Math.abs(y1 - y2);
     const highlight = this.props.highlight;
@@ -37,10 +35,14 @@ export default class Link extends React.PureComponent<LinkProps, null> {
     return <div className={clsNames} style={style} key={genKey([x1, y1, x2, y2])} />;
   }
   drawLines(): JSX.Element {
-    const _this$props = this.props, source = _this$props.source, target = _this$props.target;
+    const {
+      source,
+      target
+    } = this.props
+
     const x1 = source.x, y1 = source.y;
     const x2 = target.x, y2 = target.y;
-    let lines = [];
+    let lines: JSX.Element[] = [];
 
     if (x1 === x2 || y1 === y2) {
       // 一条直线
@@ -62,7 +64,7 @@ export default class Link extends React.PureComponent<LinkProps, null> {
       </React.Fragment>
     );
   }
-  render(): JSX.Element {
-    return this.drawLines();
+  render() {
+    return this.drawLines()
   }
 }

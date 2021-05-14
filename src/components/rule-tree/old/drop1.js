@@ -1,8 +1,8 @@
 import _extends from "@babel/runtime/helpers/extends";
 import React from 'react';
 import { DropTarget } from 'react-dnd';
-import Link from './link';
-import constants from './constants';
+import Link from '../es/link';
+import constants from '../es/constants';
 const COMPONENT_SPACE_VERTICAL = constants.COMPONENT_SPACE_VERTICAL, COMPONENT_SPACE_HORIZONTAL = constants.COMPONENT_SPACE_HORIZONTAL, RELATION_WIDTH = constants.RELATION_WIDTH, COMPONENT_HEIGHT = constants.COMPONENT_HEIGHT;
 const innerStyle = {
   width: RELATION_WIDTH,

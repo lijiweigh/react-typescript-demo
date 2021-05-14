@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { RuleTreeProps, NodeType, DataType, DragProps, DropProps } from './interface'
+import { RuleTreeProps, NodeType, DataType, DragProps, DropProps } from '../es'
 import { Button, Select, Tooltip, Form as AntdForm } from 'antd'
 import { DeleteOutlined, PlusOutlined, PlusSquareOutlined } from '@ant-design/icons'
 import { Icon, Balloon, } from '@alifd/next'
@@ -9,15 +9,14 @@ import { hierarchy } from 'd3-hierarchy'
 import { DndProvider, createDndContext } from 'react-dnd'
 import HTML5Backend from 'react-dnd-html5-backend'
 import { isObject, isArray, isUndefined, assign, get, set } from 'lodash-es'
-import Drag, { UnDrag } from './drag'
-import Drop from './drop'
-import Link from './link'
-import constants from './constants'
+import Drag, { UnDrag } from '../es/drag'
+import Drop from '../es/drop'
+import Link from '../es/link'
+import constants from '../es/constants'
 import GovIcon from '@aligov/icon'
 import './index.scss'
 
 const FormItem = AntdForm.Item
-// const Tooltip = Balloon.Tooltip
 
 function getHierarchyId(...args: any[]) {
   for (var _len = args.length, ids = new Array(_len), _key = 0; _key < _len; _key++) {
@@ -28,17 +27,21 @@ function getHierarchyId(...args: any[]) {
 }
 
 let gIndex = 0
-const RELATIONS = constants.RELATIONS,
-  ACTION = constants.ACTION,
-  RELATION = constants.RELATION,
-  LEAF = constants.LEAF,
-  COMPONENT_HEIGHT = constants.COMPONENT_HEIGHT,
-  COMPONENT_SPACE_HORIZONTAL = constants.COMPONENT_SPACE_HORIZONTAL,
-  COMPONENT_SPACE_VERTICAL = constants.COMPONENT_SPACE_VERTICAL,
-  COMPONENT_MARGIN = constants.COMPONENT_MARGIN,
-  RELATION_WIDTH = constants.RELATION_WIDTH,
-  ALIGN_CENTER = constants.ALIGN_CENTER,
-  ICON_CENTER = constants.ICON_CENTER
+
+const {
+  RELATIONS,
+  ACTION,
+  RELATION,
+  LEAF,
+  COMPONENT_HEIGHT,
+  COMPONENT_SPACE_HORIZONTAL,
+  COMPONENT_SPACE_VERTICAL,
+  COMPONENT_MARGIN,
+  RELATION_WIDTH,
+  ALIGN_CENTER,
+  FLEX_ALIGN_CENTER,
+} = constants
+
 const DndContext = createDndContext(HTML5Backend)
 
 const alwaysTrue = function alwaysTrue() {
@@ -71,169 +74,6 @@ export default class RuleTree extends React.Component<RuleTreeProps, null> {
     this.inited = false
     this.pathByKey = Object.create(null)
 
-    this.handleAddCondition = (data) => {
-      const children = get(this.value, data.parentPath)
-      children.push({})
-
-      this.onChange(this.value)
-    }
-
-    this.handleAddGroup = (data: { parentPath: any }) => {
-      const children = get(this.value, data.parentPath)
-      children.push({
-        children: [{}],
-      })
-
-      this.onChange(this.value)
-    }
-
-    this.handleDrop = (dropProps, dragProps) => {
-      const parent = get(this.value, dragProps.data.parentPath)
-      const dropParent = get(this.value, dropProps.data.parentPath) // 删掉
-
-      const dragItem = parent.splice(dragProps.data.index, 1)[0] // 添加
-
-      dropParent.splice(dropProps.data.index, 0, dragItem)
-
-      this.onChange(this.value)
-    }
-
-    this.handleDeleteGroup = (node) => {
-      const deleteParent = node.parent
-      const deleteGrandPa = deleteParent.parent
-
-      if (!deleteGrandPa) {
-        // root
-        this.value.children = []
-      } else if (!deleteGrandPa.data.parentPath) {
-        // grandpa是root
-        this.value.children.splice(deleteParent.data.index, 1)
-      } else {
-        const dp = get(this.value, deleteParent.data.parentPath)
-        dp.splice(deleteParent.data.index, 1)
-      }
-
-      this.onChange(this.value)
-    }
-
-    this.handleDelete = (data, node) => {
-      if (node.parent.children.length === 2) {
-        this.handleDeleteSingleGroup(node)
-      } else {
-        const deleteParent = get(this.value, data.parentPath)
-        deleteParent.splice(data.index, 1)
-
-        this.onChange(this.value)
-      }
-    }
-
-    this.onValuesChange = (changedValues, allValues) => {
-      const _this = this
-      _this.value = allValues
-
-      const namePath = _this.getNamePath(changedValues)
-
-      const _this$props = _this.props,
-        cascades = _this$props.cascades,
-        onCascade = _this$props.onCascade
-      const lastIndex = namePath.length - 1
-      const id = namePath[lastIndex]
-      const path = namePath.slice(0, lastIndex)
-
-      if (onCascade && cascades && cascades.indexOf(id) > -1) {
-        const ctx = {
-          getValue: (cid: any) => {
-            return _this.form!.getFieldValue([...path, cid])
-          },
-          setValues: (cid: { [x: string]: any }, value: any) => {
-            const fields = []
-
-            if (isObject(cid)) {
-              Object.keys(cid).forEach((k) => {
-                const name = [...path, k]
-                set(_this.value, name, value)
-                fields.push({
-                  name,
-                  value: cid[k],
-                })
-              })
-            } else {
-              const name = [].concat(path, [cid])
-              set(_this.value, name, value)
-              fields.push({
-                name,
-                value,
-              })
-            }
-
-            _this.form.setFields(fields)
-          },
-          id,
-          key: get(allValues, [].concat(path, ['key'])),
-          value: _this.form.getFieldValue(namePath),
-        }
-        onCascade(ctx)
-      }
-
-      _this.onChange(_this.value)
-    }
-
-    this.renderActions = (data) => {
-      const this$props2 = this.props,
-        canAddCondition = this$props2.canAddCondition,
-        canAddConditionGroup = this$props2.canAddConditionGroup // const curLevel = data.parentPath.reduce((memo, item) => {
-      //   if(item === 'children') {
-      //     memo += 1;
-      //   }
-      //   return memo;
-      // }, 0);
-
-      const finalCanAddCondition = canAddCondition(data)
-      const finalCanAddConditionGroup = canAddConditionGroup(data)
-      return (
-        <div className='actions'>
-          {
-            <Tooltip
-              title='添加条件'
-            >
-              <PlusOutlined
-                  disabled={!finalCanAddCondition}
-                  style={{
-                    color: '#c7d0d9',
-                    padding: '0 8px',
-                    borderRight: '1px dashed #c7d0d9',
-                    height: '100%',
-                    ...ICON_CENTER
-                  }}
-                  onClick={() => {
-                    return finalCanAddCondition && this.handleAddCondition(data)
-                  }}
-                />
-            </Tooltip>
-          }
-          {
-            <Tooltip
-              title='添加条件组'
-            >
-              <PlusSquareOutlined
-                  style={{
-                    color: '#c7d0d9',
-                    padding: '0 8px',
-                    fontSize: '15px',
-                    height: '100%',
-                    ...ICON_CENTER
-                  }}
-                  disabled={!finalCanAddCondition}
-                  onClick={() => {
-                    return finalCanAddConditionGroup && this.handleAddGroup(data)
-                  }}
-                />
-            </Tooltip>
-          }
-        </div>
-      )
-    }
-
     this.dndType = `dndType-${gIndex}`
     gIndex += 1
     let defaultValue = {
@@ -255,6 +95,172 @@ export default class RuleTree extends React.Component<RuleTreeProps, null> {
       this.onChange(this.value)
     }
   }
+
+  handleAddCondition = (data) => {
+    const children = get(this.value, data.parentPath)
+    children.push({})
+
+    this.onChange(this.value)
+  }
+
+  handleAddGroup = (data: { parentPath: any }) => {
+    const children = get(this.value, data.parentPath)
+    children.push({
+      children: [{}],
+    })
+
+    this.onChange(this.value)
+  }
+
+  handleDrop = (dropProps, dragProps) => {
+    console.log(dropProps)
+    console.log(dragProps)
+    const parent = get(this.value, dragProps.data.parentPath)
+    const dropParent = get(this.value, dropProps.data.parentPath) // 删掉
+
+    const dragItem = parent.splice(dragProps.data.index, 1)[0] // 添加
+
+    dropParent.splice(dropProps.data.index, 0, dragItem)
+
+    this.onChange(this.value)
+  }
+
+  handleDeleteGroup = (node) => {
+    const deleteParent = node.parent
+    const deleteGrandPa = deleteParent.parent
+
+    if (!deleteGrandPa) {
+      // root
+      this.value.children = []
+    } else if (!deleteGrandPa.data.parentPath) {
+      // grandpa是root
+      this.value.children.splice(deleteParent.data.index, 1)
+    } else {
+      const dp = get(this.value, deleteParent.data.parentPath)
+      dp.splice(deleteParent.data.index, 1)
+    }
+
+    this.onChange(this.value)
+  }
+
+  handleDelete = (data, node) => {
+    if (node.parent.children.length === 2) {
+      this.handleDeleteSingleGroup(node)
+    } else {
+      const deleteParent = get(this.value, data.parentPath)
+      deleteParent.splice(data.index, 1)
+
+      this.onChange(this.value)
+    }
+  }
+
+  onValuesChange = (changedValues, allValues) => {
+    const _this = this
+    _this.value = allValues
+
+    const namePath = _this.getNamePath(changedValues)
+
+    const _this$props = _this.props,
+      cascades = _this$props.cascades,
+      onCascade = _this$props.onCascade
+    const lastIndex = namePath.length - 1
+    const id = namePath[lastIndex]
+    const path = namePath.slice(0, lastIndex)
+
+    if (onCascade && cascades && cascades.indexOf(id) > -1) {
+      const ctx = {
+        getValue: (cid: any) => {
+          return _this.form!.getFieldValue([...path, cid])
+        },
+        setValues: (cid: { [x: string]: any }, value: any) => {
+          const fields = []
+
+          if (isObject(cid)) {
+            Object.keys(cid).forEach((k) => {
+              const name = [...path, k]
+              set(_this.value, name, value)
+              fields.push({
+                name,
+                value: cid[k],
+              })
+            })
+          } else {
+            const name = [].concat(path, [cid])
+            set(_this.value, name, value)
+            fields.push({
+              name,
+              value,
+            })
+          }
+
+          _this.form.setFields(fields)
+        },
+        id,
+        key: get(allValues, [].concat(path, ['key'])),
+        value: _this.form.getFieldValue(namePath),
+      }
+      onCascade(ctx)
+    }
+
+    _this.onChange(_this.value)
+  }
+
+  renderActions = (data) => {
+    const this$props2 = this.props,
+      canAddCondition = this$props2.canAddCondition,
+      canAddConditionGroup = this$props2.canAddConditionGroup // const curLevel = data.parentPath.reduce((memo, item) => {
+    //   if(item === 'children') {
+    //     memo += 1;
+    //   }
+    //   return memo;
+    // }, 0);
+
+    const finalCanAddCondition = canAddCondition(data)
+    const finalCanAddConditionGroup = canAddConditionGroup(data)
+    return (
+      <div className='actions'>
+        {
+          <Tooltip
+            title='添加条件'
+          >
+            <PlusOutlined
+                disabled={!finalCanAddCondition}
+                style={{
+                  color: '#c7d0d9',
+                  padding: '0 8px',
+                  borderRight: '1px dashed #c7d0d9',
+                  height: '100%',
+                  ...FLEX_ALIGN_CENTER
+                }}
+                onClick={() => {
+                  return finalCanAddCondition && this.handleAddCondition(data)
+                }}
+              />
+          </Tooltip>
+        }
+        {
+          <Tooltip
+            title='添加条件组'
+          >
+            <PlusSquareOutlined
+                style={{
+                  color: '#c7d0d9',
+                  padding: '0 8px',
+                  fontSize: '15px',
+                  height: '100%',
+                  ...FLEX_ALIGN_CENTER
+                }}
+                disabled={!finalCanAddCondition}
+                onClick={() => {
+                  return finalCanAddConditionGroup && this.handleAddGroup(data)
+                }}
+              />
+          </Tooltip>
+        }
+      </div>
+    )
+  }
+
   getUniqKey(key: any, keyMap: any): any {
     if (key in keyMap) {
       const k = key + 1
@@ -489,7 +495,12 @@ export default class RuleTree extends React.Component<RuleTreeProps, null> {
                 <Field name={path}>
                   {(control) => {
                     return (
-                      <FormItem>
+                      <FormItem
+                        style={{
+                          marginBottom: 0,
+                          ...FLEX_ALIGN_CENTER
+                        }}
+                      >
                         {
                           <Select
                             {...{
@@ -538,7 +549,7 @@ export default class RuleTree extends React.Component<RuleTreeProps, null> {
                     cursor: 'pointer',
                     color: '#c7d0d9',
                     ...ALIGN_CENTER,
-                    ...ICON_CENTER
+                    ...FLEX_ALIGN_CENTER
                   }}
                   onClick={() => {
                     return _this.handleDelete(data, node)
@@ -680,9 +691,6 @@ export default class RuleTree extends React.Component<RuleTreeProps, null> {
     return (
       <Field name={namePath} key={getHierarchyId(key, id)} rules={rules}>
         {(control, meta, form) => {
-          console.log(control)
-          console.log(meta)
-          console.log(form)
           if (render) {
             const ctx = {
               getValue: (cid) => {
@@ -731,6 +739,8 @@ export default class RuleTree extends React.Component<RuleTreeProps, null> {
             <FormItem
               style={{
                 marginLeft: index ? COMPONENT_MARGIN : 0,
+                marginBottom: 0,
+                ...FLEX_ALIGN_CENTER
               }}
               help={help}
               validateStatus={validateState}

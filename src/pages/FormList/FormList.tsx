@@ -168,9 +168,17 @@ export default function FormList() {
       <PageHeader title='表单列表' />
       <section className="padding-4x">
         <Card>
-          <Form {...layout} form={form} name='createForm' onFinish={onFinish}>
+          <Form {...layout} onValuesChange={(c) => console.log(c)} form={form} name='createForm' onFinish={onFinish}>
             <Form.Item name='name' label='Activity name'>
-              <Input />
+              <div>
+                <Input />
+                <Form.Item name='aaa.zone2' label='Activity zone2'>
+                  <Select allowClear>
+                    <Option value='beijing'>zone one</Option>
+                    <Option value='shanghai'>zone twe</Option>
+                  </Select>
+                </Form.Item>
+              </div>
             </Form.Item>
             <Form.Item name='zone' label='Activity zone'>
               <Select allowClear>
