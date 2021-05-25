@@ -4,7 +4,7 @@ import { HierarchyPointNode } from 'd3-hierarchy'
 import { Rule } from 'rc-field-form/lib/interface';
 
 export interface ValueProps {
-  relation: string | number
+  relation: StoreValue
   children: StoreValue
   [key: string]: StoreValue
 }
@@ -51,8 +51,14 @@ export interface RuleTreeProps {
   style?: CSSProperties
   className?: string
   canRootChange?: boolean
-  canAddCondition: (data: RootNodeType) => boolean
-  canAddConditionGroup: (data: RootNodeType) => boolean
+  deleteIcon?: JSX.Element | ((node: HierarchyPointNode<ChildNodeType>) => JSX.Element)
+  canDelete?: boolean | 'disabled' | ((node: HierarchyPointNode<ChildNodeType>) => boolean | 'disabled')
+  dragIcon?:JSX.Element | ((node: HierarchyPointNode<ChildNodeType>) => JSX.Element)
+  canDrag?: boolean | 'disabled' | ((node: HierarchyPointNode<ChildNodeType>) => boolean | 'disabled')
+  canAddCondition?: boolean | 'disabled' | ((data: ActionNodeType) => boolean | 'disabled')
+  canAddConditionGroup?: boolean | 'disabled' | ((data: ActionNodeType) => boolean | 'disabled')
+  addConditionIcon?: JSX.Element | ((node: ActionNodeType) => JSX.Element)
+  addConditionGroupIcon?: JSX.Element | ((node: ActionNodeType) => JSX.Element)
 }
 
 export interface CascadesContext {
@@ -90,6 +96,8 @@ export interface DragProps {
   x: number
   y: number
   isDragging?: boolean
+  dragIcon?: JSX.Element | ((node: HierarchyPointNode<ChildNodeType>) => JSX.Element)
+  canDrag?: boolean | 'disabled' | ((node: HierarchyPointNode<ChildNodeType>) => boolean | 'disabled')
   connectDragSource?: (source: ReactElement) => ReactElement
   connectDragPreview?: (preview: ReactElement) => ReactElement
   type: string

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { Card, Form, Button, message, DatePicker, Switch, Checkbox, Radio, Select, Input } from 'antd'
 import PageHeader from '../../components/PageHeader/PageHeader'
 import { CreateFormReq } from '../../types/form'
@@ -7,12 +7,14 @@ import { FormTypeList, FormResourceList } from '../../const/form'
 import { Code } from 'test-react-component';
 // import GovRuleTree from '@aligov/gov-rule-tree';
 import GovRuleTree from '../../components/rule-tree/es';
+import { RuleTree } from 'grammy'
 // import { Select, Input } from '@alifd/next';
 // javascript 所需引入的包
 import 'codemirror/mode/javascript/javascript.js';
 import 'codemirror/addon/hint/javascript-hint.js';
 // import './index.less'
 import mmmm from './index.module.less'
+import { StepBackwardOutlined } from '@ant-design/icons'
 
 console.log(mmmm)
 
@@ -65,10 +67,38 @@ function SayHello() {
       })
     }, 3000);
   }, [])
+
+  const ctx = useRef(null)
+
   return (
     <div style={{padding: '50px', background: '#fff'}}>
-      <GovRuleTree
+      <RuleTree
+        ref={ctx}
         // disabled
+        // addConditionDisabled={(data) => data.level === 1}
+        // addConditionGroupDisabled={(data) => data.level === 2}
+        // canAddCondition={(data) => data.level === 1222}
+        // canAddConditionGroup={(data) => data.level === 1222}
+        // canDelete={ (node) => {
+        //   return false
+        // }}
+        // deleteIcon={() => <StepBackwardOutlined />}
+        // dragIcon={(node) => {
+        //   return <StepBackwardOutlined />
+        // }}
+        // canDrag={() => {
+        //   return false
+        // }}
+        // canAddCondition={(data) => data.level > 1 ? 'disabled' : true}
+        // canAddConditionGroup={(data) => data.level > 1}
+        // addConditionIcon={() => <StepBackwardOutlined style={{padding: '0 8px'}} />}
+        // addConditionGroupIcon={<StepBackwardOutlined style={{padding: '0 8px'}} />}
+        // canDrag={(data) => {
+        //   if('data' in data) {
+        //     return data?.data?.type === 'leaf'
+        //   }
+        //   return false
+        // }}
         canRootChange={true}
         onChange={changedValues => {
           console.log('changedValues: ', JSON.stringify(changedValues));
@@ -103,12 +133,13 @@ function SayHello() {
             // element: <Input style={{ width: 200 }} placeholder="请输入数量" />
             render() {
               return <Input style={{ width: 200 }} placeholder="请输入数量" />
+              // return <input type="text"/>
             }
           }
         ]}
       />
       <Code.Basic
-      mode="javascript"
+        mode="javascript"
         value={value}
         events={[
           {

@@ -2,6 +2,7 @@ export enum NodeType {
   RELATION = 'relation',
   LEAF = 'leaf',
   ACTION = 'action',
+  DROP = 'drop'
 }
 // 关系节点宽度
 export const RELATION_WIDTH = 80

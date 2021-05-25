@@ -1,3 +1,4 @@
+// @ts-nocheck
 import {
   RuleTreeProps,
   DragProps,
@@ -7,7 +8,7 @@ import {
   ChildNodeType,
   ActionNodeType,
   FieldProps,
-} from './index.d'
+} from '../es'
 import { Button, Select, Tooltip, Form as AntdForm } from 'antd'
 import { DeleteOutlined, PlusOutlined, PlusSquareOutlined } from '@ant-design/icons'
 import React from 'react'
@@ -16,9 +17,9 @@ import { hierarchy, HierarchyPointLink, HierarchyPointNode } from 'd3-hierarchy'
 import { DndProvider, createDndContext } from 'react-dnd'
 import HTML5Backend from 'react-dnd-html5-backend'
 import { isObject, isArray, isUndefined, assign, get, set, cloneDeep } from 'lodash-es'
-import Drag, { UnDrag } from './drag'
-import Drop from './drop'
-import Link from './link'
+import Drag, { UnDrag } from '../es/drag'
+import Drop from '../es/drop'
+import Link from '../es/link'
 import {
   RELATIONS,
   NodeType,
@@ -33,7 +34,7 @@ import {
   RELATION_HEIGHT,
   ICON_COLOR,
   ACTION_HEIGHT,
-} from './constants'
+} from '../es/constants'
 import './index.less'
 
 const { ACTION, RELATION, LEAF, DROP } = NodeType
@@ -66,6 +67,14 @@ let gIndex = 0
 
 const DndContext = createDndContext(HTML5Backend)
 
+const alwaysTrue = function alwaysTrue() {
+  return true
+}
+
+const alwaysFalse = function alwaysTrue() {
+  return false
+}
+
 export default class RuleTree extends React.Component<RuleTreeProps> {
   form: FormInstance | undefined
   dndType: string
@@ -76,6 +85,10 @@ export default class RuleTree extends React.Component<RuleTreeProps> {
   static defaultProps: {
     rootRelations: { value: string; text: string }[]
     relations: { value: string; text: string }[]
+    canAddCondition: () => boolean
+    canAddConditionGroup: () => boolean
+    addConditionDisabled: () => boolean
+    addConditionGroupDisabled: () => boolean
   }
   constructor(props: RuleTreeProps) {
     super(props)
@@ -101,52 +114,15 @@ export default class RuleTree extends React.Component<RuleTreeProps> {
   }
 
   getDragResult = (node: HierarchyPointNode<ChildNodeType> | HierarchyPointLink<ChildNodeType>) => {
-    const { dragIcon, canDrag = true } = this.props
-    let canD = canDrag
-    let dIcon = dragIcon
-    if (typeof dragIcon === 'function') {
-      dIcon = dragIcon(node as HierarchyPointNode<ChildNodeType>)
+    const { dragIcon, canDrag, disabled } = this.props
+    let notDrag = disabled || dragIcon === false || canDrag === false
+    if(typeof canDrag === 'function') {
+      notDrag = !canDrag(node)
     }
-    if (typeof canDrag === 'function') {
-      canD = canDrag(node as HierarchyPointNode<ChildNodeType>)
-    }
-    const DragItem = canD ? Drag : UnDrag
+    const DragItem = notDrag ? UnDrag : Drag
     return {
-      canDrag: canD,
-      DragItem,
-      dragIcon: dIcon,
-    }
-  }
-
-  getAddConditionResult = (node: ActionNodeType) => {
-    const { addConditionIcon, canAddCondition = true } = this.props
-    let canA = canAddCondition
-    let aIcon = addConditionIcon
-    if (typeof addConditionIcon === 'function') {
-      aIcon = addConditionIcon(node)
-    }
-    if (typeof canAddCondition === 'function') {
-      canA = canAddCondition(node)
-    }
-    return {
-      canAddCondition: canA,
-      addConditionIcon: aIcon,
-    }
-  }
-
-  getAddConditionGroupResult = (node: ActionNodeType) => {
-    const { addConditionGroupIcon, canAddConditionGroup = true } = this.props
-    let canA = canAddConditionGroup
-    let aIcon = addConditionGroupIcon
-    if (typeof addConditionGroupIcon === 'function') {
-      aIcon = addConditionGroupIcon(node)
-    }
-    if (typeof canAddConditionGroup === 'function') {
-      canA = canAddConditionGroup(node)
-    }
-    return {
-      canAddConditionGroup: canA,
-      addConditionGroupIcon: aIcon,
+      notDrag,
+      DragItem
     }
   }
 
@@ -231,12 +207,8 @@ export default class RuleTree extends React.Component<RuleTreeProps> {
       createKey(value)
     }
   }
-  addOperation(
-    children: any[],
-    parentPath: (string | number)[],
-    level: number,
-    disabled?: boolean,
-  ) {
+  addOperation(children: any[], parentPath: (string | number)[], level: number, disabled?: boolean) {
+    const { canAddCondition, canAddConditionGroup } = this.props
     if (children === undefined) {
       children = []
     }
@@ -280,10 +252,10 @@ export default class RuleTree extends React.Component<RuleTreeProps> {
         parentPath,
         level: level + 1,
       }
-      const { canAddCondition } = this.getAddConditionResult(data)
-      const { canAddConditionGroup } = this.getAddConditionGroupResult(data)
-      if (canAddCondition || canAddConditionGroup) {
+      if (canAddCondition(data) || canAddConditionGroup(data)) {
         result.push(data)
+      } else {
+        result.push({...data, type: DROP})
       }
     }
 
@@ -291,6 +263,7 @@ export default class RuleTree extends React.Component<RuleTreeProps> {
   }
   buildNodes(
     root: HierarchyPointNode<ChildNodeType>,
+    disabled?: boolean,
   ): {
     nodes: HierarchyPointNode<ChildNodeType>
     height: number
@@ -300,13 +273,14 @@ export default class RuleTree extends React.Component<RuleTreeProps> {
     let height = 0
 
     const nodes = root.eachAfter((d) => {
-      const { canDrag } = this.getDragResult(d)
+      const { notDrag } = this.getDragResult(d)
+      console.log(notDrag)
       d.y =
         //        关系节点的宽度 + 水平两个节点的距离 + 可以拖动时拖动按钮额外产生的宽度
         d.depth *
-        (RELATION_WIDTH + COMPONENT_SPACE_HORIZONTAL + (canDrag ? EXTRA_MOVE_ICON_WIDTH : 0))
+        (RELATION_WIDTH + COMPONENT_SPACE_HORIZONTAL + (notDrag ? 0 : EXTRA_MOVE_ICON_WIDTH))
       // 根节点不能拖动，所以减去一个 EXTRA_MOVE_ICON_WIDTH
-      if (canDrag && d.depth > 0) {
+      if (!notDrag && d.depth > 0) {
         d.y -= EXTRA_MOVE_ICON_WIDTH
       }
 
@@ -321,7 +295,9 @@ export default class RuleTree extends React.Component<RuleTreeProps> {
         // 根节点 后序遍历结束，开始设置整个规则树的高度
         if (!d.parent) {
           // 最下面的节点的x + 节点高度
-          height = findLastChild(d).x + COMPONENT_HEIGHT
+          const lastNode = findLastChild(d)
+          console.log(lastNode)
+          height = lastNode.x + (lastNode.data.type === DROP ? 0 : COMPONENT_HEIGHT)
         }
       }
     })
@@ -333,11 +309,15 @@ export default class RuleTree extends React.Component<RuleTreeProps> {
   }
 
   createFields(nodes: HierarchyPointNode<ChildNodeType>[], disabled?: boolean) {
-    const { fields, relations, rootRelations, canRootChange } = this.props
+    const { fields, relations, rootRelations, canRootChange, dragIcon, canDrag } = this.props
     const value = this.value
     const result: JSX.Element[] = []
+    // let DragItem = (disabled || dragIcon === false || canDrag === false) ? UnDrag : Drag
     nodes.forEach((node, nindex) => {
-      const { DragItem, dragIcon, canDrag } = this.getDragResult(node)
+      // if(typeof canDrag === 'function') {
+      //   DragItem = canDrag(node) ? Drag : UnDrag
+      // }
+      const { DragItem } = this.getDragResult(node)
       const { data, x, y, parent } = node
       const { type, key, index, path } = data as ChildNodeType
 
@@ -386,7 +366,7 @@ export default class RuleTree extends React.Component<RuleTreeProps> {
         result.push(fieldElm)
       } else {
         // 非root节点，关系节点/叶子节点/action节点/drop节点
-        if (canDrag && !disabled) {
+        if (!disabled) {
           // drop
           const dropX =
             index === 0
@@ -400,7 +380,7 @@ export default class RuleTree extends React.Component<RuleTreeProps> {
               node={node}
               data={data}
               onDrop={this.handleDrop}
-              disabled={!canDrag && !disabled}
+              disabled={disabled}
               type={this.dndType}
               key={getHierarchyId(key, 'drop')}
             />
@@ -421,7 +401,6 @@ export default class RuleTree extends React.Component<RuleTreeProps> {
               data={data}
               type={this.dndType}
               dragIcon={dragIcon}
-              canDrag={canDrag}
               key={getHierarchyId(key, 'relation')}
             >
               {
@@ -462,15 +441,7 @@ export default class RuleTree extends React.Component<RuleTreeProps> {
             </DragItem>
           )
         } else if (type === LEAF) {
-          const { deleteIcon, canDelete = true } = this.props
-          let canD = canDelete
-          let dIcon = deleteIcon
-          if (typeof canDelete === 'function') {
-            canD = canDelete(node)
-          }
-          if (typeof deleteIcon === 'function') {
-            dIcon = deleteIcon(node)
-          }
+          const { deleteIcon } = this.props
           // 叶子节点
           ele = (
             <DragItem
@@ -480,41 +451,37 @@ export default class RuleTree extends React.Component<RuleTreeProps> {
               node={node}
               type={this.dndType}
               dragIcon={dragIcon}
-              canDrag={canDrag}
               key={getHierarchyId(key, 'leaf')}
             >
               {fields.map((field: FieldProps, i: number) => {
                 return this.renderField(field, i, path, key, disabled)
               })}
-              {!disabled && canD !== false && (
+              {!disabled && deleteIcon !== false &&  (
                 <span
                   style={{
                     marginLeft: COMPONENT_MARGIN,
-                    cursor: canD === 'disabled' ? 'not-allowed' : 'pointer',
+                    cursor: 'pointer',
                   }}
                   onClick={() => {
-                    if (canD === 'disabled') {
-                      return
-                    }
                     return this.handleDelete(data, node)
                   }}
                 >
-                  {React.isValidElement(dIcon) ? (
-                    dIcon
-                  ) : (
-                    <DeleteOutlined
-                      style={{
-                        color: ICON_COLOR,
-                        ...ALIGN_CENTER,
-                        ...FLEX_ALIGN_CENTER,
-                      }}
-                    />
-                  )}
+                  {
+                    deleteIcon ? deleteIcon : (
+                      <DeleteOutlined
+                        style={{
+                          color: ICON_COLOR,
+                          ...ALIGN_CENTER,
+                          ...FLEX_ALIGN_CENTER,
+                        }}
+                      />
+                    )
+                  }
                 </span>
               )}
             </DragItem>
           )
-        } else if (type === ACTION) {
+        } else if(type === ACTION) {
           // action节点
           ele = (
             <div
@@ -544,7 +511,7 @@ export default class RuleTree extends React.Component<RuleTreeProps> {
     index: number,
     path: (string | number)[],
     key: any,
-    disabled?: boolean,
+    disabled?: boolean
   ): JSX.Element {
     const { id, rules, render } = field
     const namePath = [...path, id]
@@ -590,10 +557,18 @@ export default class RuleTree extends React.Component<RuleTreeProps> {
   }
 
   renderActions = (data: ActionNodeType) => {
-    const { canAddCondition, addConditionIcon } = this.getAddConditionResult(data)
-    const { canAddConditionGroup, addConditionGroupIcon } = this.getAddConditionGroupResult(data)
-    const finalAddConditionDisabled = canAddCondition === 'disabled'
-    const finalAddConditionGroupDisabled = canAddConditionGroup === 'disabled'
+    console.log('renderActions', cloneDeep(data))
+    const {
+      addConditionDisabled,
+      addConditionGroupDisabled,
+      canAddCondition,
+      canAddConditionGroup,
+    } = this.props
+
+    const finalCanAddCondition = canAddCondition(data)
+    const finalCanAddConditionGroup = canAddConditionGroup(data)
+    const finalAddConditionDisabled = addConditionDisabled(data)
+    const finalAddConditionGroupDisabled = addConditionGroupDisabled(data)
     return (
       <div
         className='actions'
@@ -602,12 +577,12 @@ export default class RuleTree extends React.Component<RuleTreeProps> {
           marginTop: `${(COMPONENT_HEIGHT - ACTION_HEIGHT) / 2}px`,
         }}
       >
-        {canAddCondition && (
+        {finalCanAddCondition && (
           <Tooltip title='添加条件'>
             <span
               style={{
                 cursor: finalAddConditionDisabled ? 'not-allowed' : 'pointer',
-                borderRight: canAddConditionGroup ? '1px dashed ' + ICON_COLOR : 'none',
+                borderRight: '1px dashed ' + ICON_COLOR,
                 height: '100%',
                 ...FLEX_ALIGN_CENTER,
               }}
@@ -615,20 +590,16 @@ export default class RuleTree extends React.Component<RuleTreeProps> {
                 return !finalAddConditionDisabled && this.handleAddCondition(data)
               }}
             >
-              {React.isValidElement(addConditionIcon) ? (
-                addConditionIcon
-              ) : (
-                <PlusOutlined
-                  style={{
-                    color: ICON_COLOR,
-                    padding: '0 8px',
-                  }}
-                />
-              )}
+              <PlusOutlined
+                style={{
+                  color: ICON_COLOR,
+                  padding: '0 8px',
+                }}
+              />
             </span>
           </Tooltip>
         )}
-        {canAddConditionGroup && (
+        {finalCanAddConditionGroup && (
           <Tooltip title='添加条件组'>
             <span
               style={{
@@ -640,17 +611,13 @@ export default class RuleTree extends React.Component<RuleTreeProps> {
                 return !finalAddConditionGroupDisabled && this.handleAddGroup(data)
               }}
             >
-              {React.isValidElement(addConditionGroupIcon) ? (
-                addConditionGroupIcon
-              ) : (
-                <PlusSquareOutlined
-                  style={{
-                    color: ICON_COLOR,
-                    padding: '0 8px',
-                    fontSize: '15px',
-                  }}
-                />
-              )}
+              <PlusSquareOutlined
+                style={{
+                  color: ICON_COLOR,
+                  padding: '0 8px',
+                  fontSize: '15px',
+                }}
+              />
             </span>
           </Tooltip>
         )}
@@ -658,7 +625,8 @@ export default class RuleTree extends React.Component<RuleTreeProps> {
     )
   }
 
-  createLinks(links: HierarchyPointLink<ChildNodeType>[]) {
+  createLinks(links: HierarchyPointLink<ChildNodeType>[], disabled?: boolean) {
+    const { dragIcon, canDrag } = this.props
     return links.map((link) => {
       const source = link.source,
         target = link.target
@@ -669,8 +637,13 @@ export default class RuleTree extends React.Component<RuleTreeProps> {
       if (!source.parent) {
         x = source.y + RELATION_WIDTH
       } else {
-        const { canDrag } = this.getDragResult(link)
-        x = source.y + RELATION_WIDTH + (canDrag ? COMPONENT_SPACE_HORIZONTAL : 0)
+        // let notDrag = disabled || dragIcon === false || canDrag === false
+        // if(typeof canDrag === 'function') {
+        //   notDrag = !canDrag(link)
+        // }
+        const { notDrag } = this.getDragResult(link)
+        console.log(notDrag)
+        x = source.y + RELATION_WIDTH + (notDrag ? 0 : COMPONENT_SPACE_HORIZONTAL)
       }
 
       return (
@@ -793,14 +766,17 @@ export default class RuleTree extends React.Component<RuleTreeProps> {
     // 添加【添加条件、添加条件组】
     rootNodeValue.children = this.addOperation(this.value.children, ['children'], 0, disabled)
     const root = hierarchy(rootNodeValue) as HierarchyPointNode<ChildNodeType>
+    console.log('root', cloneDeep(root))
     // 设置每个节点的位置，和组件的高度
-    const { nodes, height } = this.buildNodes(root)
+    const { nodes, height } = this.buildNodes(root, disabled)
+    console.log('nodes', nodes)
     const flattenNodes = nodes.descendants()
     const flattenLinks = nodes.links()
+    console.log('flattenLinks', cloneDeep(flattenLinks))
     // 与 form 结合
     const fields = this.createFields(flattenNodes, disabled)
     // 设置节点间的连线
-    const links = this.createLinks(flattenLinks.filter((link) => link.target.data.type !== DROP))
+    const links = this.createLinks(flattenLinks.filter(link => link.target.data.type !== DROP), disabled)
     return (
       <DndProvider manager={DndContext.dragDropManager}>
         {
@@ -834,4 +810,8 @@ export default class RuleTree extends React.Component<RuleTreeProps> {
 RuleTree.defaultProps = {
   rootRelations: RELATIONS,
   relations: RELATIONS,
+  canAddCondition: alwaysTrue,
+  canAddConditionGroup: alwaysTrue,
+  addConditionDisabled: alwaysFalse,
+  addConditionGroupDisabled: alwaysFalse,
 }

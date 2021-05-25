@@ -20,7 +20,7 @@ const Drop = function Drop(ref: any) {
     connectDropTarget,
     x,
     y,
-    canDrag,
+    disabled,
     node,
   } = ref
   const clsNames = `${canDrop ? 'drop-area' : ''} ${canDrop && isOver ? 'drop-area-can-drop' : ''}`
@@ -30,7 +30,7 @@ const Drop = function Drop(ref: any) {
   if (!parent.parent) {
     x0 = parent.y + RELATION_WIDTH
   } else {
-    x0 = parent.y + RELATION_WIDTH + (canDrag ? EXTRA_MOVE_ICON_WIDTH : 0)
+    x0 = parent.y + RELATION_WIDTH + (disabled ? 0 : EXTRA_MOVE_ICON_WIDTH)
   }
 
   return (

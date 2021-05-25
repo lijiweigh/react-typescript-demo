@@ -1,7 +1,7 @@
 import React from 'react'
 import { DragProps } from './index.d'
 import { DragSource } from 'react-dnd'
-import { ALIGN_CENTER, FLEX_ALIGN_CENTER, COMPONENT_HEIGHT } from './constants'
+import { ALIGN_CENTER, FLEX_ALIGN_CENTER, COMPONENT_HEIGHT, ICON_COLOR } from './constants'
 import { DragOutlined } from '@ant-design/icons'
 
 const handleStyle = {
@@ -19,11 +19,17 @@ const Drag = function Drag(ref: any) {
     x,
     y,
     children,
+    dragIcon,
+    canDrag
   } = ref
   const opacity = isDragging ? 0.4 : 1
   const dragHandler = (
-    <span style={handleStyle}>
-      <DragOutlined style={{ color: '#c7d0d9' }} />
+    <span style={{...handleStyle, cursor: canDrag === 'disabled' ? 'not-allowed' : 'move'}}>
+      {
+        React.isValidElement(dragIcon) ? dragIcon : (
+          <DragOutlined style={{ color: ICON_COLOR }} />
+        )
+      }
     </span>
   )
   return connectDragPreview(
@@ -63,6 +69,7 @@ export const UnDrag = function UnDrag(ref: DragProps) {
         display: 'flex',
         ...ALIGN_CENTER,
       }}
+      className='undrag'
     >
       {children}
     </div>
@@ -78,6 +85,9 @@ export default DragSource(
     beginDrag: function beginDrag(props) {
       return props
     },
+    canDrag(props, monitor) {
+      return props.canDrag !== 'disabled'
+    }
   },
   (connect, monitor) => {
     return {
