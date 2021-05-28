@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useRef, useState } from 'react'
 import { Card, Form, Button, message, DatePicker, Switch, Checkbox, Radio, Select, Input } from 'antd'
 import PageHeader from '../../components/PageHeader/PageHeader'
 import { CreateFormReq } from '../../types/form'
@@ -6,7 +6,6 @@ import { createForm } from '../../services/form'
 import { FormTypeList, FormResourceList } from '../../const/form'
 import { Code } from 'test-react-component';
 // import GovRuleTree from '@aligov/gov-rule-tree';
-import GovRuleTree from '../../components/rule-tree/es';
 import { RuleTree } from 'grammy'
 // import { Select, Input } from '@alifd/next';
 // javascript 所需引入的包
@@ -14,7 +13,6 @@ import 'codemirror/mode/javascript/javascript.js';
 import 'codemirror/addon/hint/javascript-hint.js';
 // import './index.less'
 import mmmm from './index.module.less'
-import { StepBackwardOutlined } from '@ant-design/icons'
 
 console.log(mmmm)
 
@@ -54,19 +52,19 @@ function SayHello() {
 }
 `;
   const [vvv, setVvv] = useState<any>({"relation":"or","children":[{"operation":">","amount":"3232"},{"operation":"<","amount":"3323"},{"relation":"and","children":[{"operation":"=","amount":"32323"},{"operation":">","amount":"32323"},{"operation":"=","amount":"23232322"}]}]})
-  useEffect(() => {
-    setTimeout(() => {
-      console.log('set')
-      // @ts-ignore
-      setVvv(pre => {
-        // return {
-        //   ...pre,
-        //   relation: 'and'
-        // }
-        return {"relation":"and","children":[{"operation":">","amount":"666"},{"operation":"<","amount":"3323"},{"relation":"and","children":[{"operation":"=","amount":"32323"},{"operation":">","amount":"32323"},{"operation":"=","amount":"23232322"}]}]}
-      })
-    }, 3000);
-  }, [])
+  // useEffect(() => {
+  //   setTimeout(() => {
+  //     console.log('set')
+  //     // @ts-ignore
+  //     setVvv(pre => {
+  //       // return {
+  //       //   ...pre,
+  //       //   relation: 'and'
+  //       // }
+  //       return {"relation":"and","children":[{"operation":">","amount":"666"},{"operation":"<","amount":"3323"},{"relation":"and","children":[{"operation":"=","amount":"32323"},{"operation":">","amount":"32323"},{"operation":"=","amount":"23232322"}]}]}
+  //     })
+  //   }, 3000);
+  // }, [])
 
   const ctx = useRef(null)
 
