@@ -39,12 +39,12 @@ const routes: RouteConfig[] = [
           name: 'FormList'
         }
       },
-      {
-        component: VirtualList,
-        name: 'VirtualList',
-        path: '/form/virtual-list',
-        breadCrumb: '虚拟列表',
-      },
+      // {
+      //   component: VirtualList,
+      //   name: 'VirtualList',
+      //   path: '/form/virtual-list',
+      //   breadCrumb: '虚拟列表',
+      // },
       {
         component: DynamicList,
         name: 'DynamicList',
