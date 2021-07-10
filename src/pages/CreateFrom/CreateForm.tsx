@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { Card, Form, Button, message, DatePicker, Switch, Checkbox, Radio, Select, Input } from 'antd'
 import PageHeader from '../../components/PageHeader/PageHeader'
 import { CreateFormReq } from '../../types/form'
@@ -12,14 +12,32 @@ import { RuleTree } from 'grammy'
 import 'codemirror/mode/javascript/javascript.js';
 import 'codemirror/addon/hint/javascript-hint.js';
 // import './index.less'
-import mmmm from './index.module.less'
+import lessModule from './index.module.less'
 
-console.log(mmmm)
+console.log(lessModule)
 
 const { Option } = Select
 const { RangePicker } = DatePicker
 
 export default function CreateFrom() {
+  const [progress, setProgress] = useState(0)
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setProgress(progress => {
+        let r = progress + 10 * Math.random() + 5
+        if(r >= 100) {
+          r = 100
+          clearInterval(timer)
+        }
+        return r
+      })
+    }, 1000)
+    return () => {
+      clearInterval(timer)
+    }
+  }, [])
+
   const layout = {
     labelCol: { span: 4 },
     wrapperCol: { span: 8 }
@@ -70,6 +88,7 @@ function SayHello() {
 
   return (
     <div style={{padding: '50px', background: '#fff'}}>
+      <progress max={100} value={progress} className={lessModule.progress}></progress>
       <RuleTree
         ref={ctx}
         // disabled

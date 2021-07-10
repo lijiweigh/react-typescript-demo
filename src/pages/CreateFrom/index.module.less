@@ -4,3 +4,14 @@
     color: red;
   }
 }
+.progress {
+  color: red;
+  appearance: none;
+  &::-webkit-progress-bar {
+    background-color: blue;
+  }
+  &::-webkit-progress-value {
+    background-color: red;
+    transition: all linear .3s;
+  }
+}
